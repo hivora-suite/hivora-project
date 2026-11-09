@@ -8,6 +8,12 @@ dependencies = [
     "fastapi>=0.115",
     "uvicorn>=0.32",
     "pydantic-settings>=2.6",
+    "sqlalchemy[asyncio]>=2.0",
+    "alembic>=1.14",
+    "aiosqlite>=0.20",
+    "argon2-cffi>=23.1",
+    "cryptography>=43",
+    "pyotp>=2.9",
 ]
 
 [dependency-groups]
@@ -16,6 +22,7 @@ dev = [
     "mypy>=1.13",
     "pytest>=8.3",
     "httpx2",
+    "psycopg[binary]>=3.2",  # D15: the test suite also runs on PostgreSQL
 ]
 
 [build-system]
@@ -33,6 +40,10 @@ target-version = "py313"
 select = ["E", "F", "W", "I", "B", "UP", "ASYNC", "S", "RUF"]
 ignore = ["S101"]
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106"]
+"src/**/migrations/versions/*" = ["E501", "W291"]
+
 [tool.mypy]
 strict = true
 python_version = "3.13"
@@ -40,3 +51,4 @@ mypy_path = "src"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]

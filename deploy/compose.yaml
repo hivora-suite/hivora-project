@@ -3,6 +3,8 @@
 #   HIVORA_PROJECT_BIND=192.0.2.10 docker compose -f deploy/compose.yaml up -d --build
 #
 # HIVORA_PROJECT_BIND: this machine's address; the application listens on it only.
+# HIVORA_PROJECT_ACCESS: lan (default) or public (behind an HTTPS reverse proxy, TOTP for all).
+# HIVORA_PROJECT_TRUSTED_PROXY: the reverse proxy's address (public mode).
 name: hivora-project
 
 services:
@@ -13,6 +15,9 @@ services:
     restart: unless-stopped
     ports:
       - "${HIVORA_PROJECT_BIND:?set HIVORA_PROJECT_BIND to this machine's address}:8080:8080"
+    environment:
+      HIVORA_PROJECT_ACCESS: "${HIVORA_PROJECT_ACCESS:-lan}"
+      FORWARDED_ALLOW_IPS: "${HIVORA_PROJECT_TRUSTED_PROXY:-127.0.0.1}"
     volumes:
       - data:/opt/hivora-project/data
     read_only: true

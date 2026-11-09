@@ -11,7 +11,7 @@ Conventions uniquement. La liste des routes vient de l'OpenAPI généré. Ce con
 
 ## Authentification
 
-- Cookie de session `HttpOnly`, `SameSite=Strict`, `Secure` (désactivable en développement seulement).
+- Cookie de session `HttpOnly`, `SameSite=Strict`, et `Secure` en mode d'accès `public` (en `lan`, l'accès direct se fait en HTTP).
 - Seule l'empreinte du jeton de session est stockée.
 - Routes reprises du panel : `login`, `logout`, `me`, `password`, `totp/enroll`, `totp/confirm`, `totp/disable`, `sessions`.
 

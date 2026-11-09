@@ -1,14 +1,14 @@
 # État du projet
 
-**Lot 2 terminé** : release candidate `v0.1.0-rc.1` publiée sur GitHub.
+**Lot 3 terminé.**
 
 ## Fait
 
-Dockerfile, `deploy/compose.yaml`, workflows CI, Image et Release. Installation réelle de l'image arm64 validée sur la VM.
+Contexte Member : connexion, sessions, CSRF, TOTP, comptes, rôles d'instance. Écrans de connexion, comptes et paramètres. Suite de tests aussi sur PostgreSQL.
 
 ## Prochaine étape
 
-1. Lot 3 : authentification (`roadmap.md`).
+Lot 4 : Projects (`roadmap.md`).
 
 ## Actions ouvertes (utilisateur)
 
@@ -17,5 +17,4 @@ Dockerfile, `deploy/compose.yaml`, workflows CI, Image et Release. Installation 
 
 ## Points à fixer
 
-- Lot 3 : erreurs JSON, `app-shell`, portabilité PostgreSQL des modèles repris du panel, job CI PostgreSQL, création du premier administrateur sans mot de passe durable dans les logs.
 - Lot 6 : bibliothèque de glisser-déposer.

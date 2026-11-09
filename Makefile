@@ -6,6 +6,7 @@ export RUFF_CACHE_DIR := $(WORK)/ruff
 export MYPY_CACHE_DIR := $(WORK)/mypy
 export PYTHONDONTWRITEBYTECODE := 1
 export HIVORA_PROJECT_FRONTEND_DIR := $(FRONT)/out
+export HIVORA_PROJECT_DATA_DIR := $(WORK)/data
 SERVER := cd $(CURDIR)/backend && uv run -q uvicorn --factory hivora_project.main:create_app
 # `make run` listens on the VM's own address only, reachable from the host machine.
 VM_ADDRESS := $(shell hostname -I | cut -d' ' -f1)
@@ -39,7 +40,7 @@ build: sync
 
 e2e: build
 	@cd backend && uv sync -q --locked
-	@cd $(FRONT) && E2E_SERVER="$(SERVER) --host 127.0.0.1" npm run -s e2e
+	@cd $(FRONT) && E2E_SERVER="rm -rf $(WORK)/e2e-data && export HIVORA_PROJECT_DATA_DIR=$(WORK)/e2e-data HIVORA_PROJECT_INITIAL_ADMIN_PASSWORD=e2e-initial-password && $(SERVER) --host 127.0.0.1" npm run -s e2e
 
 # Regenerate the frontend's API types from the backend's routes.
 gen:

@@ -2,6 +2,10 @@ import type { components } from "./schema";
 
 export type Schemas = components["schemas"];
 export type Health = Schemas["Health"];
+export type Me = Schemas["MeOut"];
+export type User = Schemas["UserOut"];
+export type Role = User["role"];
+export type SessionInfo = Schemas["SessionOut"];
 
 /** Error returned by the backend: `code` is stable and translated by the UI. */
 export class ApiError extends Error {

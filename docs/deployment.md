@@ -15,7 +15,7 @@ Ce document décrit des capacités, jamais une infrastructure réelle.
 
 ## Configuration
 
-Variables d'environnement préfixées `HIVORA_PROJECT_`. Mode d'accès (`lan` ou `public`) lu dans la configuration, jamais stocké en base. En mode `public`, le TOTP est obligatoire pour tous.
+Variables d'environnement préfixées `HIVORA_PROJECT_`. Mode d'accès (`lan` ou `public`) lu dans la configuration, jamais stocké en base. En mode `public`, derrière un reverse proxy HTTPS : TOTP obligatoire pour tous, cookies `Secure`, et adresse du proxy dans `HIVORA_PROJECT_TRUSTED_PROXY` pour que la limitation des essais voie la vraie adresse des clients.
 
 ## CI
 
@@ -40,6 +40,12 @@ HIVORA_PROJECT_BIND=192.0.2.10 docker compose -f deploy/compose.yaml up -d --bui
 ```
 
 L'application écoute uniquement sur l'adresse indiquée, port 8080. Choisir une version publiée. Les données sont dans le volume Docker `hivora-project_data`.
+
+## Premier démarrage et récupération
+
+Au premier démarrage, le compte `admin` reçoit un mot de passe à usage unique, affiché une seule fois dans les journaux du conteneur et à changer à la première connexion. `HIVORA_PROJECT_INITIAL_ADMIN_PASSWORD` permet de le choisir.
+
+Compte perdu : `docker exec hivora-project python -m hivora_project reset-account <utilisateur>` donne un nouveau mot de passe à usage unique, désactive le TOTP et ferme les sessions.
 
 ## Sauvegarde et mise à jour
 

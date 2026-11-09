@@ -12,10 +12,11 @@ Next.js en `output: export`, React, TypeScript, Tailwind, TanStack Query. Copie 
 
 ## À réutiliser avant de créer
 - `components/ui/*` : alert, badge, button, card, dialog, dropdown-menu, input, sheet, skeleton, table.
-- `components/` : brand, shelf-cat, grid-background, providers.
+- `components/` : app-shell (`PageHeader`, `useSession`), brand, code-view, copy, entering-screen, grid-background, providers, shelf-cat.
+- `features/account/` : password-form, totp-card.
 - `lib/` : `api/client.ts`, `i18n`, `prefs.ts`, `utils.ts`.
 
 ## Copie depuis le panel (lecture seule)
-À chaque lot, ne copier que ce qui sert, par shell, jamais lire puis réécrire : `app-shell`, `entering-screen`, `copy`, `markdown`, `status-badge`, `collapsible-card`, `totp-form` restent à reprendre. Exclure CodeMirror, xterm, React Flow, `html-to-image` et tout ce qui concerne Docker, le terminal ou la topologie. `lib/realtime.tsx` et la palette de commandes attendent une version ultérieure.
+À chaque lot, ne copier que ce qui sert, par shell, jamais lire puis réécrire : `markdown`, `status-badge`, `collapsible-card` restent à reprendre. Exclure CodeMirror, xterm, React Flow, `html-to-image` et tout ce qui concerne Docker, le terminal ou la topologie. `lib/realtime.tsx` et la palette de commandes attendent une version ultérieure.
 
 `make` construit dans `~/.cache/hivora-project`, hors du partage.

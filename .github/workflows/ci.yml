@@ -25,6 +25,29 @@ jobs:
         working-directory: /home/runner/.cache/hivora-project/frontend
       - run: make e2e
 
+  postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine@sha256:3540c0362c809df084ffac0ae69fe794515f9de92692f02178bcdce0ef0302ac
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 2s --health-timeout 5s --health-retries 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          python-version: "3.13"
+      - run: uv sync --locked
+        working-directory: backend
+      - run: uv run pytest -q --no-header -p no:cacheprovider
+        working-directory: backend
+        env:
+          HIVORA_PROJECT_TEST_DATABASE_URL: postgresql+psycopg://postgres@127.0.0.1:5432/postgres
+
   shell:
     runs-on: ubuntu-latest
     steps:

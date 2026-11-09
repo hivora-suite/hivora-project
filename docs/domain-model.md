@@ -18,9 +18,8 @@ Modèle conceptuel. Le schéma réel vit dans les migrations Alembic, à partir 
 
 | Entité | Attributs |
 |---|---|
-| `user` | identifiant, e-mail, nom affiché, empreinte du mot de passe, rôle d'instance, actif, secret TOTP chiffré, TOTP actif |
+| `user` | identifiant, nom d'utilisateur, empreinte du mot de passe, rôle d'instance, désactivé, mot de passe à changer, secret TOTP chiffré, TOTP actif, empreintes des codes de secours |
 | `session` | identifiant, utilisateur, empreinte du jeton, jeton CSRF, création, expiration |
-| `recovery_code` | identifiant, utilisateur, empreinte du code, date d'utilisation |
 | `project` | identifiant, nom, description, créateur, création, archivage |
 | `project_member` | projet, utilisateur, rôle de projet |
 | `board_column` | identifiant, projet, nom, position |
