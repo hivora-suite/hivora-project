@@ -36,7 +36,7 @@ export function GridBackground() {
     const readColors = () => {
       const css = getComputedStyle(document.documentElement);
       lineColor = css.getPropertyValue("--grid").trim() || "rgba(128,128,128,0.2)";
-      gold = css.getPropertyValue("--primary").trim() || "#df911a";
+      gold = css.getPropertyValue("--primary").trim() || "#7c38ee";
     };
 
     const layout = () => {

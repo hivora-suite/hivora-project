@@ -1,0 +1,27 @@
+# Hivora Project with Docker Compose.
+#
+#   HIVORA_PROJECT_VERSION=v0.1.0 HIVORA_PROJECT_BIND=192.0.2.10 docker compose -f deploy/compose.yaml up -d
+#
+# HIVORA_PROJECT_VERSION: a published release, never latest.
+# HIVORA_PROJECT_BIND: this machine's address; the application listens on it only.
+name: hivora-project
+
+services:
+  app:
+    image: ghcr.io/hivora-suite/hivora-project:${HIVORA_PROJECT_VERSION:?set HIVORA_PROJECT_VERSION to a release, e.g. v0.1.0}
+    container_name: hivora-project
+    restart: unless-stopped
+    ports:
+      - "${HIVORA_PROJECT_BIND:?set HIVORA_PROJECT_BIND to this machine's address}:8080:8080"
+    volumes:
+      - data:/opt/hivora-project/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  data:

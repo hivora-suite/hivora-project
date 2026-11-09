@@ -1,12 +1,12 @@
 # Design system
 
-Même DA que Hivora Panel. Source des valeurs : `frontend/app/globals.css`, copié du panel au lot 1. Ce document fixe les règles, sans recopier les valeurs.
+Même structure visuelle que Hivora Panel, avec son propre accent violet. Source des valeurs : `frontend/app/globals.css`, copié du panel au lot 1. Ce document fixe les règles, sans recopier les valeurs.
 
 ## Identité
 
-- Thèmes clair et sombre. Clair : pierre chaude, pas de blanc papier. Sombre : brun très foncé.
-- Accent miel (`--primary`), référence à la ruche.
-- Mascotte : le chat. Tout logo, icône ou état vide l'utilise : chat sombre `#2a211b`, miel `#df911a` et `#f3c560`. Jamais d'hexagone ni de lettre comme logo.
+- Thèmes clair et sombre. Clair : blanc. Sombre : noir. Neutres sans aucune teinte.
+- Accent violet vif (`--primary`), qui distingue Hivora Project de Hivora Panel.
+- Mascotte : le chat. Tout logo, icône ou état vide l'utilise : chat noir, fond violet `#7c38ee`, yeux blancs. Jamais d'hexagone ni de lettre comme logo.
 
 ## Typographie
 
@@ -31,7 +31,7 @@ Même DA que Hivora Panel. Source des valeurs : `frontend/app/globals.css`, copi
 
 - Jamais de couleur en dur : uniquement des tokens. Le thème sombre ne redéfinit que des tokens.
 - Contraste du texte d'au moins 4,5:1 (WCAG AA).
-- Ombres chaudes et léger reflet sur les surfaces en relief.
+- Ombres neutres et léger reflet sur les surfaces en relief.
 - Une seule famille d'animations : `--ease-out`, et `--ease-spring` pour les apparitions.
 - Icônes : `lucide-react`.
 - Tout élément cliquable affiche le curseur main et un focus visible.

@@ -1,0 +1,48 @@
+name: Image
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Checks the image budgets; publishing is release.yml's job (on a tag).
+permissions:
+  contents: read
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Build (amd64, loaded for the checks)
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          tags: hivora-project:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Budget — image under 120 MB on disk
+        run: |
+          size=$(docker run --rm --entrypoint sh hivora-project:ci -c 'du -sxm / 2>/dev/null | tail -1' | cut -f1)
+          echo "image: ${size} MB"
+          test "$size" -lt 120
+
+      - name: Budget — RAM at rest under 100 MB, healthy
+        run: |
+          docker run -d --name hivora-project -p 8080:8080 --read-only --tmpfs /tmp --cap-drop ALL \
+            --security-opt no-new-privileges:true hivora-project:ci
+          for i in $(seq 60); do
+            [ "$(docker inspect -f '{{.State.Health.Status}}' hivora-project)" = healthy ] && break
+            sleep 2
+          done
+          docker inspect -f '{{.State.Health.Status}}' hivora-project | grep -qx healthy || { docker logs hivora-project; exit 1; }
+          curl -sf http://127.0.0.1:8080/api/v1/system/health
+          sleep 30
+          mem=$(docker stats --no-stream --format '{{.MemUsage}}' hivora-project | awk '{print $1}')
+          echo "RAM at rest: $mem"
+          python3 -c "import re,sys; v,u=re.match(r'([\d.]+)(\w+)','$mem').groups(); mb=float(v)*{'KiB':1/1024,'MiB':1,'GiB':1024}[u]; sys.exit(mb>=100)"

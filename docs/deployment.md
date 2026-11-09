@@ -8,8 +8,10 @@ Ce document décrit des capacités, jamais une infrastructure réelle.
 - `ghcr.io/hivora-suite/hivora-project`, linux/amd64 et linux/arm64.
 - Images de base figées par digest, dépendances verrouillées (`uv.lock`, `package-lock.json`).
 - Jamais `privileged`, aucun accès au socket Docker, un seul volume : `/opt/hivora-project/data`.
+- Utilisateur non root, système de fichiers en lecture seule, capacités retirées.
+- HTTP sur le port 8080 dans le conteneur ; HTTPS assuré en amont par un reverse proxy.
 - `HEALTHCHECK` sur la route de santé.
-- Budget de l'image et de la RAM : mesurés au lot 2, puis vérifiés en CI.
+- Budgets vérifiés en CI : image < 120 Mo sur disque, RAM au repos < 100 Mo (mesuré au lot 2 : 68 Mo et 40 Mo).
 
 ## Configuration
 
@@ -29,7 +31,14 @@ Le tag `vX.Y.Z` (ou `vX.Y.Z-rc.N`) doit correspondre à la version de `pyproject
 
 ## Installation
 
-En V1, uniquement par l'image GHCR et `deploy/compose.yaml`, selon cette section, complétée au lot 2. Hivora Project est autonome : il n'a pas besoin de Hivora Panel pour être installé ou fonctionner.
+En V1, uniquement par l'image GHCR et `deploy/compose.yaml`. Hivora Project est autonome : il n'a pas besoin de Hivora Panel pour être installé ou fonctionner.
+
+```sh
+HIVORA_PROJECT_VERSION=v0.1.0 HIVORA_PROJECT_BIND=192.0.2.10 \
+  docker compose -f deploy/compose.yaml up -d
+```
+
+L'application écoute uniquement sur l'adresse indiquée, port 8080. Indiquer une version publiée, jamais `latest`. Les données sont dans le volume Docker `hivora-project_data`.
 
 ## Sauvegarde et mise à jour
 

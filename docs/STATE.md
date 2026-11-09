@@ -1,23 +1,23 @@
 # État du projet
 
-**Lot 1 terminé.**
+**Lot 2 poussé**, vérifié en local ; première exécution de la CI à contrôler.
 
 ## Fait
 
-Backend avec route de santé, page d'accueil à la DA, `make check`, `make e2e`, `make gen`, contrôle de secrets avant commit, graphe et hooks.
+Dockerfile, `deploy/compose.yaml`, workflows CI, Image et Release. Installation réelle de l'image arm64 validée sur la VM.
 
 ## Prochaine étape
 
-Lot 2 : déploiement (`roadmap.md`).
+1. Vérifier la CI sur GitHub (construction amd64, budgets, `gitleaks`).
+2. Après accord : release candidate `v0.1.0-rc.1`, puis installation depuis GHCR.
+3. Lot 3 : authentification (`roadmap.md`).
 
 ## Actions ouvertes (utilisateur)
 
 - Créer le dépôt distant privé `hivora-project-security`, puis y pousser le dépôt local voisin (D19).
 - Fournir l'adresse de contact de `SECURITY.md` avant l'ouverture du dépôt.
-- Autoriser ou non `gitleaks` : `scripts/check-secrets.sh` n'est qu'un contrôle à motifs.
 
 ## Points à fixer
 
-- Lot 2 : port, terminaison TLS, budgets de l'image et de la RAM, détection de secrets en CI.
-- Lot 3 : erreurs JSON, `app-shell`, portabilité PostgreSQL des modèles repris du panel, création du premier administrateur sans mot de passe durable dans les logs.
+- Lot 3 : erreurs JSON, `app-shell`, portabilité PostgreSQL des modèles repris du panel, job CI PostgreSQL, création du premier administrateur sans mot de passe durable dans les logs.
 - Lot 6 : bibliothèque de glisser-déposer.

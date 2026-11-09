@@ -15,6 +15,7 @@ tracked=$(git ls-files | grep -E "$names")
 
 if [ -n "$found$tracked" ]; then
   echo "Possible secrets, nothing printed on purpose:" >&2
+  # shellcheck disable=SC2086  # one file per word
   printf '%s\n' $found $tracked >&2
   exit 1
 fi

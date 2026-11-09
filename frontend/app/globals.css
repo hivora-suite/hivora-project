@@ -4,37 +4,37 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Light palette: warm stone, not paper white (less glare). The dark one only
-   redefines tokens. Honey accent (hive). Text contrast >= 4.5:1 (WCAG AA). */
+/* Black and white, no tint; one vivid violet accent. The dark palette only
+   redefines tokens. Text contrast >= 4.5:1 (WCAG AA). */
 :root {
-  --background: oklch(0.93 0.012 80);
-  --foreground: oklch(0.19 0.02 60);
-  --card: oklch(0.965 0.008 80);
-  --muted: oklch(0.9 0.014 80);
-  --muted-foreground: oklch(0.47 0.022 60);
-  --border: oklch(0.84 0.016 80);
-  --input: oklch(0.8 0.018 80);
-  --primary: oklch(0.72 0.15 70);
-  --primary-foreground: oklch(0.2 0.03 60);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0 0 0);
+  --card: oklch(1 0 0);
+  --muted: oklch(0.95 0 0);
+  --muted-foreground: oklch(0.42 0 0);
+  --border: oklch(0.88 0 0);
+  --input: oklch(0.8 0 0);
+  --primary: oklch(.54 .25 293);
+  --primary-foreground: oklch(1 0 0);
   --destructive: oklch(0.55 0.2 27);
-  --ring: oklch(0.72 0.15 70);
+  --ring: oklch(.54 .25 293);
   --ok: oklch(0.5 0.14 150);
   --info: oklch(0.5 0.13 240);
   --warn: oklch(0.55 0.14 65);
   --danger: oklch(0.52 0.2 27);
-  --idle: oklch(0.55 0.01 60);
+  --idle: oklch(0.55 0 0);
   /* Side menu groups, one hue each (never the status colours, kept for dots). */
-  --nav-apps: oklch(0.52 0.13 65);
+  --nav-apps: oklch(.54 .25 293);
   --nav-network: oklch(0.5 0.11 210);
-  --nav-admin: oklch(0.5 0.13 300);
-  --grid: oklch(0.6 0.04 70 / 0.2);
-  --field: oklch(0.945 0.01 80);
-  /* Depth: warm shadows and a light edge on raised surfaces. */
-  --shadow-color: oklch(0.35 0.04 60 / 0.16);
-  --shadow-strong: oklch(0.3 0.05 60 / 0.24);
+  --nav-admin: oklch(0.5 0.13 345);
+  --grid: oklch(0 0 0 / 0.07);
+  --field: oklch(1 0 0);
+  /* Depth: neutral shadows and a light edge on raised surfaces. */
+  --shadow-color: oklch(0 0 0 / 0.12);
+  --shadow-strong: oklch(0 0 0 / 0.2);
   --highlight: oklch(1 0 0 / 0.7);
-  --sidebar: oklch(0.955 0.01 80);
-  --chart-1: #df911a;
+  --sidebar: oklch(0.98 0 0);
+  --chart-1: #7c38ee;
   --chart-2: #1a89c5;
   /* Code editor syntax (sites' .html, .css, .js) */
   --code-keyword: oklch(0.48 0.17 305);
@@ -48,30 +48,30 @@
 }
 
 .dark {
-  --background: oklch(0.17 0.01 60);
-  --foreground: oklch(0.94 0.01 85);
-  --card: oklch(0.21 0.012 60);
-  --muted: oklch(0.25 0.012 60);
-  --muted-foreground: oklch(0.7 0.015 70);
-  --border: oklch(0.3 0.012 60);
-  --input: oklch(0.34 0.012 60);
-  --primary: oklch(0.78 0.15 75);
-  --primary-foreground: oklch(0.18 0.02 60);
+  --background: oklch(0 0 0);
+  --foreground: oklch(1 0 0);
+  --card: oklch(0.15 0 0);
+  --muted: oklch(0.22 0 0);
+  --muted-foreground: oklch(0.75 0 0);
+  --border: oklch(0.3 0 0);
+  --input: oklch(0.36 0 0);
+  --primary: oklch(.66 .23 293);
+  --primary-foreground: oklch(0 0 0);
   --ok: oklch(0.72 0.15 150);
   --info: oklch(0.7 0.12 240);
-  --idle: oklch(0.6 0.01 60);
-  --nav-apps: oklch(0.78 0.14 75);
+  --idle: oklch(0.6 0 0);
+  --nav-apps: oklch(.74 .17 293);
   --nav-network: oklch(0.76 0.11 210);
-  --nav-admin: oklch(0.76 0.12 300);
-  --grid: oklch(0.78 0.05 75 / 0.14);
+  --nav-admin: oklch(0.76 0.12 345);
+  --grid: oklch(1 0 0 / 0.09);
   --warn: oklch(0.72 0.15 70);
   --danger: oklch(0.58 0.2 27);
-  --shadow-color: oklch(0 0 0 / 0.35);
-  --shadow-strong: oklch(0 0 0 / 0.55);
+  --shadow-color: oklch(0 0 0 / 0.5);
+  --shadow-strong: oklch(0 0 0 / 0.7);
   --highlight: oklch(1 0 0 / 0.06);
-  --sidebar: oklch(0.19 0.011 60);
-  --field: oklch(0.19 0.01 60);
-  --chart-1: #c98212;
+  --sidebar: oklch(0.09 0 0);
+  --field: oklch(0.1 0 0);
+  --chart-1: #9c6aff;
   --chart-2: #1a89c5;
   --code-keyword: oklch(0.76 0.13 305);
   --code-tag: oklch(0.74 0.14 25);
