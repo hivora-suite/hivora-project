@@ -24,7 +24,7 @@
 | Action | `manager` | `contributor` | `viewer` |
 |---|---|---|---|
 | Voir le projet, le tableau, les commentaires | Oui | Oui | Oui |
-| Modifier ou archiver le projet | Oui | Non | Non |
+| Modifier, archiver ou réactiver le projet | Oui | Non | Non |
 | Gérer les membres et leurs rôles | Oui | Non | Non |
 | Gérer les colonnes | Oui | Non | Non |
 | Créer, modifier, déplacer, assigner une tâche | Oui | Oui | Non |

@@ -1,14 +1,14 @@
 # État du projet
 
-**Lot 3 terminé.**
+**Lot 4 terminé.**
 
 ## Fait
 
-Contexte Member : connexion, sessions, CSRF, TOTP, comptes, rôles d'instance. Écrans de connexion, comptes et paramètres. Suite de tests aussi sur PostgreSQL.
+Contextes Member et Project : comptes, rôles, projets, appartenance, archivage. Chaque lot passe par la CI, dont PostgreSQL.
 
 ## Prochaine étape
 
-Lot 4 : Projects (`roadmap.md`).
+Lot 5 : Tasks (`roadmap.md`), avec colonnes par défaut à la création d'un projet et libération des tâches d'un membre retiré.
 
 ## Actions ouvertes (utilisateur)
 

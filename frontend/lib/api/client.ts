@@ -6,6 +6,10 @@ export type Me = Schemas["MeOut"];
 export type User = Schemas["UserOut"];
 export type Role = User["role"];
 export type SessionInfo = Schemas["SessionOut"];
+export type Project = Schemas["ProjectOut"];
+export type ProjectRole = Project["role"];
+export type ProjectMember = Schemas["MemberOut"];
+export type Candidate = Schemas["CandidateOut"];
 
 /** Error returned by the backend: `code` is stable and translated by the UI. */
 export class ApiError extends Error {

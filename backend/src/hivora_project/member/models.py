@@ -47,3 +47,25 @@ class Session(Base):
     created_at: Mapped[datetime] = mapped_column(UTCDateTime)
     last_seen_at: Mapped[datetime] = mapped_column(UTCDateTime)
     expires_at: Mapped[datetime] = mapped_column(UTCDateTime)  # absolute limit
+
+
+class ProjectRole(StrEnum):
+    VIEWER = "viewer"
+    CONTRIBUTOR = "contributor"
+    MANAGER = "manager"
+
+    def allows(self, required: "ProjectRole") -> bool:
+        order = list(ProjectRole)
+        return order.index(self) >= order.index(required)
+
+
+class ProjectMember(Base):
+    __tablename__ = "project_member"
+
+    project_id: Mapped[int] = mapped_column(
+        ForeignKey("project.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("user.id", ondelete="CASCADE"), primary_key=True, index=True
+    )
+    role: Mapped[ProjectRole] = mapped_column(str_enum(ProjectRole))

@@ -11,6 +11,7 @@ from hivora_project.core.crypto.cipher import SecretBox, load_or_create_master_k
 from hivora_project.core.db.engine import make_engine, make_sessionmaker
 from hivora_project.core.db.migrate import prepare_schema
 from hivora_project.member.service import AuthService
+from hivora_project.project.service import ProjectService
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,13 +19,15 @@ class Runtime:
     settings: Settings
     engine: AsyncEngine
     auth: AuthService
+    projects: ProjectService
 
     @classmethod
     def build(cls, settings: Settings) -> "Runtime":
         engine = make_engine(settings.db_url)
         box = SecretBox(load_or_create_master_key(settings.secret_key_path))
-        auth = AuthService(settings=settings, sessions=make_sessionmaker(engine), box=box)
-        return cls(settings, engine, auth)
+        sessions = make_sessionmaker(engine)
+        auth = AuthService(settings=settings, sessions=sessions, box=box)
+        return cls(settings, engine, auth, ProjectService(sessions=sessions, clock=auth.clock))
 
     async def start(self) -> None:
         await asyncio.to_thread(prepare_schema, self.settings)

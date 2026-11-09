@@ -13,6 +13,9 @@ Gestion de projet pour équipes auto-hébergées, avec le front et la DA de Hivo
 ## Reuse First
 Avant de créer composant, route, page, hook, service, endpoint, table ou type : chercher l'existant (`graphify query`, puis recherche ciblée). Créer seulement si rien d'équivalent n'existe ou si généraliser coûterait plus cher, et dire en une ligne ce qui a été cherché. La duplication est un bug d'architecture.
 
+## Code
+Très optimisé, séparé par responsabilité, le moins de lignes possible.
+
 ## Output rules
 Réponses courtes, sans explication inutile. Montrer uniquement : fichiers modifiés, justification si nécessaire, étapes de validation.
 

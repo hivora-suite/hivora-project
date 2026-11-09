@@ -6,10 +6,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from hivora_project.core.crypto.passwords import hash_password
+from hivora_project.member.access import UserNotFoundError
 from hivora_project.member.models import User
 from hivora_project.member.sessions import revoke_sessions
 from hivora_project.member.totp import clear_totp
-from hivora_project.member.users import UserNotFoundError
 
 ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789"  # no 0/o, 1/l/i: read from a terminal
 GROUPS, GROUP = 4, 5  # 20 characters, about 99 bits

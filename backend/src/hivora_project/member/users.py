@@ -8,15 +8,16 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from hivora_project.core.clock import Clock
 from hivora_project.core.crypto.passwords import hash_password
-from hivora_project.core.errors import ConflictError, NotFoundError
+from hivora_project.core.errors import ConflictError
+from hivora_project.member.access import (
+    LastManagerError,
+    UserNotFoundError,
+    is_only_manager_somewhere,
+)
 from hivora_project.member.models import Role, User
 from hivora_project.member.passwords import check_password_policy, validate_username
 from hivora_project.member.sessions import revoke_sessions
 from hivora_project.member.totp import clear_totp
-
-
-class UserNotFoundError(NotFoundError):
-    code = "user_not_found"
 
 
 class LastAdminError(ConflictError):
@@ -94,6 +95,8 @@ class UserAdmin:
             user = await get_user(session, user_id)
             if user.role is Role.ADMIN and not user.disabled:
                 await self._ensure_other_admin(session, user.id)
+            if await is_only_manager_somewhere(session, user.id):
+                raise LastManagerError("this account is the only manager of a project")
             await session.delete(user)
 
     async def revoke_sessions(self, user_id: int, *, keep: int | None = None) -> None:

@@ -35,7 +35,7 @@ jobs:
       - name: Budget — RAM at rest under 100 MB, healthy
         run: |
           docker run -d --name hivora-project -p 8080:8080 --read-only --tmpfs /tmp --cap-drop ALL \
-            --security-opt no-new-privileges:true hivora-project:ci
+            --security-opt no-new-privileges:true -v hivora-project-data:/opt/hivora-project/data hivora-project:ci
           for i in $(seq 60); do
             [ "$(docker inspect -f '{{.State.Health.Status}}' hivora-project)" = healthy ] && break
             sleep 2

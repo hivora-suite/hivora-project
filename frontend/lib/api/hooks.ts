@@ -2,9 +2,20 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { api, setCsrfToken, type Me, type Role, type SessionInfo, type User } from "./client";
+import {
+  api,
+  setCsrfToken,
+  type Candidate,
+  type Me,
+  type Project,
+  type ProjectMember,
+  type ProjectRole,
+  type Role,
+  type SessionInfo,
+  type User,
+} from "./client";
 
-export const keys = { me: ["me"], users: ["users"], sessions: ["sessions"] } as const;
+export const keys = { me: ["me"], users: ["users"], sessions: ["sessions"], projects: ["projects"] } as const;
 
 export function useMe() {
   return useQuery({
@@ -71,4 +82,44 @@ export const userApi = {
     api<void>(`/users/${id}/password`, { method: "POST", body: { temporary } }),
   resetTotp: (id: number) => api<void>(`/users/${id}/totp/reset`, { method: "POST" }),
   revokeSessions: (id: number) => api<void>(`/users/${id}/sessions`, { method: "DELETE" }),
+};
+
+export const useProjects = (archived: boolean) =>
+  useQuery({
+    queryKey: [...keys.projects, { archived }],
+    queryFn: () => api<Project[]>("/projects", { query: { archived: String(archived) } }),
+  });
+
+export const useProject = (id: number) =>
+  useQuery({ queryKey: [...keys.projects, id], queryFn: () => api<Project>(`/projects/${id}`), enabled: id > 0, retry: false });
+
+export const useMembers = (id: number) =>
+  useQuery({ queryKey: [...keys.projects, id, "members"], queryFn: () => api<ProjectMember[]>(`/projects/${id}/members`) });
+
+export const useCandidates = (id: number) =>
+  useQuery({ queryKey: [...keys.projects, id, "candidates"], queryFn: () => api<Candidate[]>(`/projects/${id}/candidates`) });
+
+export function useCreateProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => api<Project>("/projects", { method: "POST", body: { name } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.projects }),
+  });
+}
+
+/** Any change to a project: everything shown about projects is read again. */
+export function useProjectMutation<V>(fn: (v: V) => Promise<unknown>) {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: fn, onSuccess: () => qc.invalidateQueries({ queryKey: keys.projects }) });
+}
+
+export const projectApi = {
+  update: ({ id, ...b }: { id: number; name: string; description: string }) =>
+    api<Project>(`/projects/${id}`, { method: "PATCH", body: b }),
+  archive: (id: number) => api<Project>(`/projects/${id}/archive`, { method: "POST" }),
+  unarchive: (id: number) => api<Project>(`/projects/${id}/unarchive`, { method: "POST" }),
+  setMember: ({ id, userId, role }: { id: number; userId: number; role: ProjectRole }) =>
+    api<void>(`/projects/${id}/members/${userId}`, { method: "PUT", body: { role } }),
+  removeMember: ({ id, userId }: { id: number; userId: number }) =>
+    api<void>(`/projects/${id}/members/${userId}`, { method: "DELETE" }),
 };

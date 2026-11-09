@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from hivora_project.core.config import Settings
 from hivora_project.member.api import router as auth_router
 from hivora_project.member.users_api import router as users_router
+from hivora_project.project.api import router as projects_router
 from hivora_project.runtime import Runtime
 from hivora_project.web import errors
 
@@ -48,6 +49,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     errors.install(app)
     app.include_router(auth_router, prefix=f"{API_PREFIX}/auth")
     app.include_router(users_router, prefix=f"{API_PREFIX}/users")
+    app.include_router(projects_router, prefix=f"{API_PREFIX}/projects")
 
     @app.get(f"{API_PREFIX}/system/health")
     async def health() -> Health:

@@ -49,7 +49,7 @@ function NavTree({ pathname, can }: { pathname: string; can: (role: Role) => boo
   return (
     <nav aria-label={t("nav.menu")} className="flex flex-col gap-1">
       {NAV.filter((n) => can(n.role)).map((n) => {
-        const active = n.href === "/" ? pathname === "/" : pathname.startsWith(n.href);
+        const active = n.href === "/" ? pathname === "/" || pathname.startsWith("/project/") : pathname.startsWith(n.href);
         return (
           <Link key={n.href} href={n.href} aria-current={active ? "page" : undefined} className={cn(LINK, active ? LINK_ON : LINK_OFF)}>
             <n.icon className="size-4 shrink-0" /> {t(n.label)}

@@ -2,6 +2,7 @@
 
 ## [Non publié]
 
+- Projets : création, membres et rôles par projet, archivage.
 - Comptes et connexion : mots de passe, sessions, double authentification, codes de secours, rôles.
 
 ## [0.1.0-rc.1]

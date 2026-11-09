@@ -26,6 +26,20 @@ test("the admin signs in, replaces the initial password, creates an account, sig
   await page.getByRole("dialog").getByRole("button", { name: "Ajouter un utilisateur" }).click();
   await expect(page.getByRole("cell", { name: "camille", exact: true })).toBeVisible();
 
+  await page.getByRole("link", { name: "Projets" }).click();
+  await page.getByRole("button", { name: "Nouveau projet" }).click();
+  await page.locator("#project-name").fill("Site vitrine");
+  await page.getByRole("dialog").getByRole("button", { name: "Créer" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Site vitrine");
+
+  await page.locator("#candidate").selectOption({ label: "camille" });
+  await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+  await expect(page.getByRole("cell", { name: "camille", exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Archiver" }).click();
+  await expect(page.getByRole("button", { name: "Réactiver" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Retirer camille du projet" })).toHaveCount(0);
+
   await page.getByRole("button", { name: "Se déconnecter" }).click();
   await expect(page).toHaveURL(/\/login\/$/);
 });
