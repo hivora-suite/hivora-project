@@ -47,9 +47,9 @@ L'application écoute uniquement sur l'adresse indiquée, port 8080. Indiquer un
 - Mise à jour : changer de version d'image, les migrations s'appliquent au démarrage.
 - Retour en arrière : restaurer la sauvegarde avec l'image précédente.
 
-## Dépôt privé jusqu'à la revue de sécurité
+## Visibilité de l'image
 
-L'image GHCR est privée pendant cette période : le pull demande un jeton personnel local, jamais versionné. Les builds multi-architecture consomment les minutes de CI du compte : à surveiller.
+Le paquet GHCR a sa propre visibilité, indépendante de celle du dépôt : il doit être public pour une installation sans jeton.
 
 ## Conseils de durcissement
 

@@ -21,7 +21,7 @@ Une ligne par décision. Toutes datées du 09/11/2026.
 | D15 | SQLite WAL en V1, compatibilité PostgreSQL obligatoire (`conventions.md`) | Migration future sans réécriture métier |
 | D16 | Tout secret exposé est compromis et doit être remplacé (`conventions.md`) | Une suppression n'annule pas une exposition |
 | D17 | TOTP en V1 : activation par utilisateur, codes de secours, réinitialisation par un administrateur, obligatoire pour les instances exposées publiquement | Exposition Internet à prévoir |
-| D18 | Dépôt privé jusqu'à la première revue de sécurité : aucune publication avant, aucun secret dedans même privé, ouverture visée après validation | Revue avant exposition |
+| D18 | Dépôt public depuis le 09/11/2026 ; revue de sécurité obligatoire avant toute release stable ; aucun secret ni information d'infrastructure dans le dépôt | Code AGPL ouvert, sans publier de version stable non revue |
 | D19 | Documentation sécurité dans un dépôt privé séparé : hors du répertoire du projet, non indexée par graphify, non chargée automatiquement, jamais de secret dedans | Isolation structurelle |
 | D20 | Licence AGPL-3.0 | Cohérence avec le panel |
 | D21 | Vue liste et temps réel en V1.1 | V1 limitée |

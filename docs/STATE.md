@@ -15,7 +15,7 @@ Dockerfile, `deploy/compose.yaml`, workflows CI, Image et Release. Installation 
 ## Actions ouvertes (utilisateur)
 
 - Créer le dépôt distant privé `hivora-project-security`, puis y pousser le dépôt local voisin (D19).
-- Fournir l'adresse de contact de `SECURITY.md` avant l'ouverture du dépôt.
+- Activer le signalement privé de GitHub, puis compléter le contact de `SECURITY.md`.
 
 ## Points à fixer
 

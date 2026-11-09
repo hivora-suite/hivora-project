@@ -26,4 +26,4 @@ Une session par lot.
 | 5. Tasks | Tâches et colonnes | Le Kanban n'est qu'une vue des tâches |
 | 6. Kanban | Tableau, déplacement souris et clavier | Exige des tâches réelles |
 | 7. Comments | Commentaires | Élément terminal, réductible sans bloquer la V1 |
-| 8. Release V1 | Revue de sécurité, mise à jour depuis la RC testée, ouverture du dépôt après accord, release après accord | Seul le produit complet peut être revu puis publié |
+| 8. Release V1 | Revue de sécurité, mise à jour depuis la RC testée, release après accord | Seul le produit complet peut être revu puis publié |

@@ -35,7 +35,7 @@ SQLite WAL en V1, compatibilité PostgreSQL obligatoire.
 
 | Niveau | Contenu | Règle |
 |---|---|---|
-| 0. Public | Vision, roadmap, architecture métier, domain model, design system, conventions | Dans le dépôt ; publication possible après la revue de sécurité |
+| 0. Public | Vision, roadmap, architecture métier, domain model, design system, conventions | Dans le dépôt public |
 | 1. Secrets | Clés API, tokens, secrets JWT, mots de passe, certificats, clés SSH et privées, secrets Cloudflare, GitHub, GHCR, SMTP, base de données | Interdits dans `CLAUDE.md`, `CLAUDE.local.md`, documentation, graphify, commits, issues, exemples. Uniquement : variables d'environnement, secret manager, fichiers locaux ignorés par git et hors du dépôt quand c'est possible |
 | 2. Infrastructure | IP internes, noms réels des serveurs, inventaire, URLs de production, topologie détaillée, configuration SSH | Interdits dans tous les `CLAUDE.md`, `docs/`, graphify, commits, issues, exemples. Décrire des capacités, jamais l'implémentation réelle |
 | 3. Documentation sécurité | Modèle de menaces, durcissement, réponse à incident | Dépôt privé séparé, lu sur demande explicite ; jamais de niveau 1, niveau 2 seulement si indispensable |

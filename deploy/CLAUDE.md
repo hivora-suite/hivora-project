@@ -11,7 +11,7 @@ Détail du pipeline : `docs/deployment.md`.
 - Secrets de CI uniquement dans GitHub Actions.
 
 ## Exigent un accord explicite
-Tag ou release, publication d'image, ouverture du dépôt.
+Tag ou release, publication d'image.
 
 ## Reprise du panel
 Copier, en lecture seule, `../hivora_panel/Dockerfile`, ses workflows CI, image et release, et `release-check.sh`. Dans la copie, retirer le binaire Compose, le catalogue, `install.sh` et tout accès au socket Docker.
