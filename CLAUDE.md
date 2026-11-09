@@ -41,8 +41,8 @@ Lire ce fichier, `docs/STATE.md`, puis seulement le document routé. Un lot par 
 ## Sécurité
 Jamais de secret (clé, token, mot de passe, certificat) ni d'infrastructure réelle (IP, serveurs, URLs de production, SSH) dans les `CLAUDE.md`, la documentation, graphify, les commits, les issues ou les exemples. Tout secret exposé est compromis et doit être remplacé. La documentation sécurité vit hors de ce dépôt : ne la lire que sur demande explicite.
 
-## Commandes (à partir du lot 1)
-`make check` tout vérifier · `make e2e` parcours navigateur · `make gen` types de l'API
+## Commandes
+`make check` tout vérifier · `make e2e` parcours navigateur · `make gen` types de l'API · `make run` lancer sur l'adresse de la VM, port 8000 · `make lock` après un changement de `package.json` · `make hooks` poser les hooks git
 
-## Graphify (à partir du lot 1)
+## Graphify
 `graphify query "<question>" --budget 800` avant de parcourir le code ; `path` et `explain` pour les relations ; `graphify update .` après modification. `GRAPH_REPORT.md` : revues d'architecture seulement.

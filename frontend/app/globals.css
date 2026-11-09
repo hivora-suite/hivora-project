@@ -1,0 +1,439 @@
+@import "tailwindcss";
+@import "@fontsource-variable/outfit";
+@import "@fontsource-variable/jetbrains-mono";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Light palette: warm stone, not paper white (less glare). The dark one only
+   redefines tokens. Honey accent (hive). Text contrast >= 4.5:1 (WCAG AA). */
+:root {
+  --background: oklch(0.93 0.012 80);
+  --foreground: oklch(0.19 0.02 60);
+  --card: oklch(0.965 0.008 80);
+  --muted: oklch(0.9 0.014 80);
+  --muted-foreground: oklch(0.47 0.022 60);
+  --border: oklch(0.84 0.016 80);
+  --input: oklch(0.8 0.018 80);
+  --primary: oklch(0.72 0.15 70);
+  --primary-foreground: oklch(0.2 0.03 60);
+  --destructive: oklch(0.55 0.2 27);
+  --ring: oklch(0.72 0.15 70);
+  --ok: oklch(0.5 0.14 150);
+  --info: oklch(0.5 0.13 240);
+  --warn: oklch(0.55 0.14 65);
+  --danger: oklch(0.52 0.2 27);
+  --idle: oklch(0.55 0.01 60);
+  /* Side menu groups, one hue each (never the status colours, kept for dots). */
+  --nav-apps: oklch(0.52 0.13 65);
+  --nav-network: oklch(0.5 0.11 210);
+  --nav-admin: oklch(0.5 0.13 300);
+  --grid: oklch(0.6 0.04 70 / 0.2);
+  --field: oklch(0.945 0.01 80);
+  /* Depth: warm shadows and a light edge on raised surfaces. */
+  --shadow-color: oklch(0.35 0.04 60 / 0.16);
+  --shadow-strong: oklch(0.3 0.05 60 / 0.24);
+  --highlight: oklch(1 0 0 / 0.7);
+  --sidebar: oklch(0.955 0.01 80);
+  --chart-1: #df911a;
+  --chart-2: #1a89c5;
+  /* Code editor syntax (sites' .html, .css, .js) */
+  --code-keyword: oklch(0.48 0.17 305);
+  --code-tag: oklch(0.5 0.17 25);
+  --code-attr: oklch(0.52 0.13 65);
+  --code-string: oklch(0.48 0.13 150);
+  --code-number: oklch(0.55 0.15 45);
+  --code-property: oklch(0.48 0.13 245);
+  --code-function: oklch(0.47 0.14 265);
+  --code-comment: oklch(0.55 0.02 70);
+}
+
+.dark {
+  --background: oklch(0.17 0.01 60);
+  --foreground: oklch(0.94 0.01 85);
+  --card: oklch(0.21 0.012 60);
+  --muted: oklch(0.25 0.012 60);
+  --muted-foreground: oklch(0.7 0.015 70);
+  --border: oklch(0.3 0.012 60);
+  --input: oklch(0.34 0.012 60);
+  --primary: oklch(0.78 0.15 75);
+  --primary-foreground: oklch(0.18 0.02 60);
+  --ok: oklch(0.72 0.15 150);
+  --info: oklch(0.7 0.12 240);
+  --idle: oklch(0.6 0.01 60);
+  --nav-apps: oklch(0.78 0.14 75);
+  --nav-network: oklch(0.76 0.11 210);
+  --nav-admin: oklch(0.76 0.12 300);
+  --grid: oklch(0.78 0.05 75 / 0.14);
+  --warn: oklch(0.72 0.15 70);
+  --danger: oklch(0.58 0.2 27);
+  --shadow-color: oklch(0 0 0 / 0.35);
+  --shadow-strong: oklch(0 0 0 / 0.55);
+  --highlight: oklch(1 0 0 / 0.06);
+  --sidebar: oklch(0.19 0.011 60);
+  --field: oklch(0.19 0.01 60);
+  --chart-1: #c98212;
+  --chart-2: #1a89c5;
+  --code-keyword: oklch(0.76 0.13 305);
+  --code-tag: oklch(0.74 0.14 25);
+  --code-attr: oklch(0.82 0.12 80);
+  --code-string: oklch(0.78 0.13 145);
+  --code-number: oklch(0.78 0.13 50);
+  --code-property: oklch(0.76 0.11 235);
+  --code-function: oklch(0.78 0.11 265);
+  --code-comment: oklch(0.6 0.02 70);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: "Outfit Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", monospace;
+  /* One easing family everywhere: fast start, soft landing; a light spring for pops. */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --shadow-xs: 0 1px 2px var(--shadow-color);
+  --shadow-sm: 0 1px 2px var(--shadow-color), 0 2px 6px -2px var(--shadow-color);
+  --shadow-md: 0 2px 4px -1px var(--shadow-color), 0 8px 20px -8px var(--shadow-strong);
+  --shadow-lg: 0 4px 8px -2px var(--shadow-color), 0 18px 40px -12px var(--shadow-strong);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-destructive: var(--destructive);
+  --color-ring: var(--ring);
+  --color-ok: var(--ok);
+  --color-info: var(--info);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
+  --color-idle: var(--idle);
+  --color-sidebar: var(--sidebar);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* In the base layer, like Tailwind's own reset: the default border color, which any
+   border-* utility (border-primary, border-danger…) overrides. Unlayered, it beat them all. */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+}
+
+/* Grid items default to min-width: auto and grow to fit long content (logs,
+   compose files), pushing the layout past the screen. Let them shrink. */
+.grid > * {
+  min-width: 0;
+}
+
+/* Tailwind 4 leaves the arrow on buttons: everything clickable shows the hand. */
+a[href],
+button:not(:disabled),
+[role="button"],
+[role="tab"],
+[role="switch"]:not(:disabled),
+select:not(:disabled),
+summary,
+input[type="checkbox"]:not(:disabled),
+input[type="radio"]:not(:disabled),
+input[type="file"]:not(:disabled) {
+  cursor: pointer;
+}
+/* Separate rule: a browser without :has() drops only this one, not the one above. */
+label:has(> input:not(:disabled)),
+label:has(> span > input:not(:disabled)) {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* ---- Motion: short, purposeful, and off when the user asks for less. ---- */
+@keyframes hv-countdown {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+/* Job pop-ups: a springy rise in, a little wind-up then a slide out; status icon pop. */
+@keyframes hv-toast-in {
+  0% { opacity: 0; transform: translate3d(0, 32px, 0) scale(0.9); }
+  55% { opacity: 1; transform: translate3d(0, -7px, 0) scale(1.02); }
+  78% { transform: translate3d(0, 2px, 0) scale(0.995); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes hv-toast-out {
+  0% { opacity: 1; transform: none; }
+  28% { opacity: 1; transform: translate3d(-8px, 0, 0) scale(1.015); }
+  100% { opacity: 0; transform: translate3d(115%, 0, 0) scale(0.92); }
+}
+/* Side panel: slides in from the right with a little overshoot; the burger menu springs open
+   from its button (top right). */
+@keyframes hv-sheet-in {
+  0% { transform: translate3d(100%, 0, 0); }
+  65% { transform: translate3d(-10px, 0, 0); }
+  85% { transform: translate3d(3px, 0, 0); }
+  100% { transform: none; }
+}
+@keyframes hv-sheet-out {
+  from { transform: none; opacity: 1; }
+  to { transform: translate3d(100%, 0, 0); opacity: 0.6; }
+}
+@keyframes hv-burger-in {
+  0% { opacity: 0; transform: scale(0.8) translateY(-8px); }
+  60% { opacity: 1; transform: scale(1.03) translateY(1px); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes hv-pop {
+  0% { opacity: 0; transform: scale(0) rotate(-30deg); }
+  55% { opacity: 1; transform: scale(1.3) rotate(8deg); }
+  75% { transform: scale(0.9) rotate(-3deg); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes hv-shake {
+  0%, 100% { transform: none; }
+  18% { transform: translateX(-6px) rotate(-0.6deg); }
+  36% { transform: translateX(5px) rotate(0.5deg); }
+  54% { transform: translateX(-3px); }
+  72% { transform: translateX(2px); }
+}
+
+@keyframes hv-enter {
+  from { opacity: 0; transform: translateY(10px) scale(0.99); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes hv-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes hv-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes hv-pop-in {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes hv-pop-out {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  to { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
+}
+@keyframes hv-menu-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes hv-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+@keyframes hv-stripes {
+  from { background-position: 0 0; }
+  to { background-position: 28px 0; }
+}
+
+@utility animate-enter { animation: hv-enter 420ms var(--ease-out) both; }
+@utility animate-toast-in { animation: hv-toast-in 620ms var(--ease-out) both; }
+@utility animate-toast-out { animation: hv-toast-out 420ms cubic-bezier(0.55, 0, 0.75, 0.2) forwards; }
+@utility animate-pop { animation: hv-pop 560ms var(--ease-out) both; }
+@utility animate-sheet {
+  &[data-state="open"] { animation: hv-sheet-in 560ms var(--ease-out); }
+  &[data-state="closed"] { animation: hv-sheet-out 260ms cubic-bezier(0.55, 0, 0.75, 0.2); }
+}
+@utility animate-burger { transform-origin: top right; animation: hv-burger-in 380ms var(--ease-out) both; }
+@utility animate-shake { animation: hv-shake 460ms var(--ease-out) both; }
+/* Children appear one after another (cards of a page, form sections). */
+@utility stagger {
+  & > * { animation: hv-enter 460ms var(--ease-out) both; }
+  & > *:nth-child(2) { animation-delay: 50ms; }
+  & > *:nth-child(3) { animation-delay: 100ms; }
+  & > *:nth-child(4) { animation-delay: 150ms; }
+  & > *:nth-child(5) { animation-delay: 200ms; }
+  & > *:nth-child(6) { animation-delay: 250ms; }
+  & > *:nth-child(n + 7) { animation-delay: 300ms; }
+}
+@utility animate-overlay {
+  &[data-state="open"] { animation: hv-fade-in 180ms ease-out; }
+  &[data-state="closed"] { animation: hv-fade-out 140ms ease-in; }
+}
+@utility animate-dialog {
+  &[data-state="open"] { animation: hv-pop-in 320ms var(--ease-spring); }
+  &[data-state="closed"] { animation: hv-pop-out 140ms ease-in; }
+}
+@utility animate-menu {
+  &[data-state="open"] { animation: hv-menu-in 220ms var(--ease-out); }
+}
+@utility skeleton {
+  border-radius: 0.5rem;
+  background: linear-gradient(90deg, var(--muted) 25%, color-mix(in oklch, var(--muted), var(--foreground) 6%) 50%, var(--muted) 75%);
+  background-size: 200% 100%;
+  animation: hv-shimmer 1.4s ease-in-out infinite;
+}
+/* Running progress bar: moving stripes show that work is still happening. */
+@utility progress-active {
+  background-image: linear-gradient(135deg, rgb(255 255 255 / 0.28) 25%, transparent 25%, transparent 50%,
+    rgb(255 255 255 / 0.28) 50%, rgb(255 255 255 / 0.28) 75%, transparent 75%, transparent);
+  background-size: 28px 28px;
+  animation: hv-stripes 0.8s linear infinite;
+}
+@utility stroke-grid { stroke: var(--grid); }
+
+/* ---- Depth ---- */
+/* Raised surface (cards, panels): layered warm shadow + a light top edge. */
+@utility surface {
+  background-color: var(--card);
+  box-shadow: inset 0 1px 0 var(--highlight), var(--shadow-sm);
+}
+/* Interactive cards lift on hover, the shadow grows with them. */
+@utility card-interactive {
+  transition: transform 260ms var(--ease-out), box-shadow 260ms var(--ease-out), border-color 260ms var(--ease-out);
+  &:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in oklch, var(--primary), transparent 45%);
+    box-shadow: inset 0 1px 0 var(--highlight), var(--shadow-lg);
+  }
+}
+/* Buttons: flat faces, a crisp edge, no glow; they settle (1px) when pressed rather than
+   float on hover. --btn is the face colour. */
+@utility btn-3d {
+  transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out),
+    box-shadow 160ms var(--ease-out), color 160ms var(--ease-out), transform 90ms var(--ease-out);
+  &:active { transform: translateY(1px); }
+}
+/* Solid (primary, destructive): the colour itself, edged a shade deeper, a little more depth
+   at the bottom (like honey pooling); hover deepens the colour. */
+@utility btn-solid {
+  background-color: var(--btn);
+  border: 1px solid color-mix(in oklch, var(--btn), black 11%);
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.22), inset 0 -2px 0 color-mix(in oklch, var(--btn), black 8%),
+    0 1px 2px var(--shadow-color);
+  &:hover { background-color: color-mix(in oklch, var(--btn), black 7%); }
+  &:active {
+    background-color: color-mix(in oklch, var(--btn), black 11%);
+    box-shadow: inset 0 1px 2px oklch(0 0 0 / 0.2);
+  }
+}
+/* Outline: the card's colour, a clean border, a hairline shadow; hover tints it. */
+@utility btn-raised {
+  background-color: var(--card);
+  box-shadow: 0 1px 2px var(--shadow-color);
+  &:hover {
+    background-color: color-mix(in oklch, var(--card), var(--foreground) 4%);
+    border-color: color-mix(in oklch, var(--input), var(--foreground) 14%);
+  }
+  &:active { box-shadow: inset 0 1px 2px var(--shadow-color); }
+}
+/* Text fields sit slightly into the page; focus shows a soft honey halo. */
+@utility field {
+  background-color: var(--field);
+  box-shadow: inset 0 1px 2px var(--shadow-color);
+  transition: border-color 200ms var(--ease-out), box-shadow 200ms var(--ease-out), background-color 200ms var(--ease-out);
+  &:focus-visible {
+    background-color: var(--card);
+    box-shadow: inset 0 1px 2px var(--shadow-color), 0 0 0 3px color-mix(in oklch, var(--ring), transparent 70%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+/* ---- Shelf cat (components/shelf-cat.tsx) ----
+   One 32 s loop: walk right, lie down (loaf), turn, walk left, stretch.
+   --walk (1 walking, 0 lying down) is animated by the path and drives the legs
+   and posture; --step swings the legs around the hip. Hover: the cat stops and
+   pricks its ears. Coordinates below are in the SVG's own units (view-box). */
+@property --walk { syntax: "<number>"; inherits: true; initial-value: 1; }
+@property --step { syntax: "<number>"; inherits: false; initial-value: 0; }
+@property --bob { syntax: "<number>"; inherits: false; initial-value: 0; }
+
+.cat-track {
+  position: relative;
+  height: 28px;
+  container-type: inline-size;
+  border-bottom: 1px solid var(--border);
+  color: color-mix(in oklch, var(--muted-foreground), transparent 10%);
+}
+.cat {
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  overflow: visible;
+  fill: currentColor;
+  animation: cat-path 32s linear infinite;
+}
+.cat-body {
+  transform-box: view-box;
+  transform-origin: 18px 16px;
+  animation: cat-bob 0.45s ease-in-out infinite alternate;
+  /* Lying down: the body settles onto the shelf, legs fold under it. */
+  transform: translateY(calc(var(--bob) * var(--walk) * 0.45px + (1 - var(--walk)) * 4.6px));
+}
+.cat-leg {
+  stroke: currentColor;
+  stroke-width: 2.4px;
+  stroke-linecap: round;
+  transform-box: fill-box;
+  transform-origin: 50% 0; /* the hip, hidden inside the body */
+  animation: cat-step 0.45s ease-in-out infinite alternate;
+}
+.cat-b { animation-delay: -0.45s; }
+.cat-far { opacity: 0.55; }
+.cat-leg { transform: rotate(calc(var(--step) * var(--walk) * 22deg)) scaleY(calc(1 - (1 - var(--walk)) * 0.62)); }
+.cat-tail {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2px;
+  stroke-linecap: round;
+  transform-box: view-box;
+  transform-origin: 9px 11.4px;
+  animation: cat-tail 2.2s ease-in-out infinite alternate;
+  /* Resting: the tail lies along the shelf instead of standing up. */
+  scale: 1 calc(1 - (1 - var(--walk)) * 0.55);
+}
+.cat-head {
+  transform-box: view-box;
+  transform-origin: 26px 10px;
+  transform: rotate(calc((1 - var(--walk)) * -6deg)); /* chin slightly down when resting */
+}
+.cat-ears { transform-box: fill-box; transform-origin: 50% 100%; transition: transform 0.25s var(--ease-spring); }
+.cat-eye { fill: var(--sidebar); transform-box: fill-box; transform-origin: center; animation: cat-blink 5.5s infinite; }
+.cat-collar { fill: none; stroke: var(--primary); stroke-width: 1.3px; stroke-linecap: round; }
+
+.cat-track:hover .cat,
+.cat-track:hover .cat * { animation-play-state: paused; }
+.cat-track:hover .cat-ears { transform: scale(1.18) translateY(-0.4px); }
+
+@keyframes cat-path {
+  0% { transform: translateX(0) scaleX(1); --walk: 1; }
+  33% { transform: translateX(calc(100cqw - 36px)) scaleX(1); --walk: 1; }
+  36%, 46% { transform: translateX(calc(100cqw - 36px)) scaleX(1); --walk: 0; }
+  48% { transform: translateX(calc(100cqw - 36px)) scaleX(-1); --walk: 0; }
+  50% { transform: translateX(calc(100cqw - 36px)) scaleX(-1); --walk: 1; }
+  83% { transform: translateX(0) scaleX(-1); --walk: 1; }
+  86% { transform: translateX(0) scaleX(-1.08); --walk: 1; } /* stretch */
+  89%, 96% { transform: translateX(0) scaleX(-1); --walk: 0; }
+  98% { transform: translateX(0) scaleX(1); --walk: 0; }
+  100% { transform: translateX(0) scaleX(1); --walk: 1; }
+}
+@keyframes cat-step { from { --step: -1; } to { --step: 1; } }
+@keyframes cat-bob { from { --bob: -1; } to { --bob: 1; } }
+@keyframes cat-tail { from { transform: rotate(-10deg); } to { transform: rotate(12deg); } }
+@keyframes cat-blink { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+
+/* Less motion asked: the cat lies down and sleeps. */
+@media (prefers-reduced-motion: reduce) {
+  .cat, .cat * { animation: none !important; }
+  .cat { --walk: 0; }
+  .cat-eye { transform: scaleY(0.12); }
+}
+
+/* Post-login transition (components/entering-screen.tsx): fade in, bar fills. */
+@keyframes hv-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.entering { animation: hv-fade-in 200ms var(--ease-out) both; }
+.entering-bar { transform-origin: left; animation: hv-fill 850ms var(--ease-out) both; }

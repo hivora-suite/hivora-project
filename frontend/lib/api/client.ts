@@ -1,0 +1,79 @@
+import type { components } from "./schema";
+
+export type Schemas = components["schemas"];
+export type Health = Schemas["Health"];
+
+/** Error returned by the backend: `code` is stable and translated by the UI. */
+export class ApiError extends Error {
+  constructor(
+    readonly status: number,
+    readonly code: string,
+    message: string,
+    readonly details: Record<string, unknown> = {},
+  ) {
+    super(message);
+  }
+}
+
+let csrfToken: string | null = null;
+
+export function setCsrfToken(token: string | null) {
+  csrfToken = token;
+}
+
+export async function api<T>(
+  path: string,
+  { method = "GET", body, query }: { method?: string; body?: unknown; query?: Record<string, string> } = {},
+): Promise<T> {
+  const url = `/api/v1${path}${query ? `?${new URLSearchParams(query)}` : ""}`;
+  const headers: Record<string, string> = {};
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+  if (method !== "GET" && csrfToken) headers["X-CSRF-Token"] = csrfToken;
+  const res = await fetch(url, {
+    method,
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
+    credentials: "same-origin",
+  });
+  if (res.status === 204) return undefined as T;
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    const err = data?.error ?? {};
+    // A public panel and no TOTP yet (e.g. reset by an admin meanwhile): set it up first.
+    if (err.code === "totp_setup_required" && location.pathname !== "/setup-totp/") location.assign("/setup-totp/");
+    throw new ApiError(res.status, err.code ?? "http_error", err.message ?? res.statusText, err.details);
+  }
+  return data as T;
+}
+
+/** Sends a file as the raw request body; XHR because fetch reports no upload progress. */
+export function upload<T>(
+  path: string,
+  file: Blob,
+  {
+    query,
+    onProgress,
+    method = "POST",
+  }: { query?: Record<string, string>; onProgress?: (fraction: number) => void; method?: "POST" | "PUT" } = {},
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, `/api/v1${path}${query ? `?${new URLSearchParams(query)}` : ""}`);
+    xhr.setRequestHeader("Content-Type", "application/zip");
+    if (csrfToken) xhr.setRequestHeader("X-CSRF-Token", csrfToken);
+    xhr.upload.onprogress = (e) => e.lengthComputable && onProgress?.(e.loaded / e.total);
+    xhr.onerror = () => reject(new ApiError(0, "http_error", "network error"));
+    xhr.onload = () => {
+      let data: { error?: { code?: string; message?: string; details?: Record<string, unknown> } } | null = null;
+      try {
+        data = JSON.parse(xhr.responseText);
+      } catch {
+        /* non-JSON answer */
+      }
+      if (xhr.status >= 200 && xhr.status < 300) return resolve(data as T);
+      const err = data?.error ?? {};
+      reject(new ApiError(xhr.status, err.code ?? "http_error", err.message ?? xhr.statusText, err.details));
+    };
+    xhr.send(file);
+  });
+}
