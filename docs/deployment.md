@@ -29,7 +29,7 @@ Le tag `vX.Y.Z` (ou `vX.Y.Z-rc.N`) doit correspondre à la version de `pyproject
 
 ## Installation
 
-Par `deploy/compose.yaml`, ou depuis le catalogue de Hivora Panel à partir de la V1 : modèle déclaratif, image figée par digest, publication possible seulement après l'ouverture du dépôt.
+En V1, uniquement par l'image GHCR et `deploy/compose.yaml`, selon cette section, complétée au lot 2. Hivora Project est autonome : il n'a pas besoin de Hivora Panel pour être installé ou fonctionner.
 
 ## Sauvegarde et mise à jour
 
@@ -45,7 +45,7 @@ L'image GHCR est privée pendant cette période : le pull demande un jeton perso
 ## Conseils de durcissement
 
 - Préférer un accès LAN ou VPN.
-- En cas d'exposition à Internet : mode `public`, HTTPS par un proxy, par exemple celui du panel.
+- En cas d'exposition à Internet : mode `public`, HTTPS par un reverse proxy.
 - Activer le TOTP pour les comptes administrateurs dans tous les cas.
 - Sauvegarder le dossier de données hors de la machine et protéger le fichier de clé.
 - Appliquer les mises à jour de sécurité sans délai.

@@ -6,6 +6,7 @@ Gestion de projet pour équipes auto-hébergées, avec le front et la DA de Hivo
 - Monolithe, un conteneur, une instance par équipe, sans accès au socket Docker.
 - FastAPI, SQLAlchemy, Alembic, SQLite WAL, SQL portable PostgreSQL.
 - Next.js exporté en statique, servi par le backend.
+- Autonome : Hivora Panel est en lecture seule, aucune modification ni dépendance.
 - Knowledge-base-first : pas de code sans document validé.
 - Hors version en cours : refuser et signaler avant de coder.
 

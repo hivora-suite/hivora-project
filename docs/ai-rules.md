@@ -32,7 +32,9 @@ Critères et exceptions. La forme courte, toujours chargée, est dans `CLAUDE.md
 
 ## Actions exigeant un accord explicite
 
-Commit, push, tag, release, publication, ouverture du dépôt, suppression de données, modification de `hivora_panel`.
+Commit, push, tag, release, publication, ouverture du dépôt, suppression de données.
+
+`hivora_panel` est en lecture seule : aucune modification depuis ce projet.
 
 ## Sécurité
 
