@@ -1,9 +1,39 @@
-node_modules/
-.next/
-out/
-target/
+# Secrets: never commit
+.env
+.env.*
+*.key
+*.pem
+id_*
+.hivora
+
+# Local assistant files
+CLAUDE.local.md
+.claude/settings.local.json
+
+# Knowledge graph, rebuilt locally
+graphify-out/
+
+# Data
 *.db
 *.db-wal
 *.db-shm
-.env
+
+# OS
 .DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Frontend
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+test-results/
+playwright-report/

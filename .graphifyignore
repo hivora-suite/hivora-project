@@ -1,0 +1,34 @@
+# Secrets
+.env
+.env.*
+*.key
+*.pem
+id_*
+.hivora
+
+# Documentation: the graph covers code only
+*.md
+docs/
+
+# Generated
+frontend/lib/api/openapi.json
+frontend/lib/api/schema.d.ts
+frontend/lib/i18n/fr.ts
+frontend/lib/i18n/en.ts
+
+# Lockfiles
+backend/uv.lock
+frontend/package-lock.json
+
+# Build output and dependencies
+node_modules/
+.next/
+out/
+.venv/
+__pycache__/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+test-results/
+playwright-report/
+graphify-out/
