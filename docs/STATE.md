@@ -1,6 +1,6 @@
 # État du projet
 
-**Lot 2 validé par la CI**, release candidate en cours.
+**Lot 2 terminé** : release candidate `v0.1.0-rc.1` publiée sur GitHub.
 
 ## Fait
 
@@ -8,8 +8,7 @@ Dockerfile, `deploy/compose.yaml`, workflows CI, Image et Release. Installation 
 
 ## Prochaine étape
 
-1. Publication de `v0.1.0-rc.1`, puis installation depuis GHCR.
-2. Lot 3 : authentification (`roadmap.md`).
+1. Lot 3 : authentification (`roadmap.md`).
 
 ## Actions ouvertes (utilisateur)
 

@@ -5,7 +5,7 @@ Ce document décrit des capacités, jamais une infrastructure réelle.
 ## Image
 
 - Un conteneur : API et front statique, servis par FastAPI sous Uvicorn. Sans Node à l'exécution.
-- `ghcr.io/hivora-suite/hivora-project`, linux/amd64 et linux/arm64.
+- Construite sur la machine d'installation depuis les sources d'une release GitHub, linux/amd64 et linux/arm64. Aucun paquet publié.
 - Images de base figées par digest, dépendances verrouillées (`uv.lock`, `package-lock.json`).
 - Jamais `privileged`, aucun accès au socket Docker, un seul volume : `/opt/hivora-project/data`.
 - Utilisateur non root, système de fichiers en lecture seule, capacités retirées.
@@ -23,33 +23,30 @@ Variables d'environnement préfixées `HIVORA_PROJECT_`. Mode d'accès (`lan` ou
 |---|---|
 | CI | Format, lint, types, tests backend sur SQLite ; migrations sur PostgreSQL ; lint, tests, build et bundle du front ; parcours e2e ; détection de secrets ; taille des documents |
 | Image | Construction, santé du conteneur, budgets |
-| Release | Tag sur `main`, cohérence des versions, publication de l'image, GitHub Release |
+| Release | Tag sur `main`, cohérence des versions, construction amd64 et arm64 sans publication, GitHub Release |
 
 ## Versions et release
 
-Le tag `vX.Y.Z` (ou `vX.Y.Z-rc.N`) doit correspondre à la version de `pyproject.toml` et de `package.json`. Les notes viennent de la section de cette version dans `CHANGELOG.md`. Une pré-version ne reçoit jamais `latest`.
+Le tag `vX.Y.Z` (ou `vX.Y.Z-rc.N`) doit correspondre à la version de `pyproject.toml` et de `package.json`. Les notes viennent de la section de cette version dans `CHANGELOG.md`. Une pré-version est marquée comme telle sur GitHub.
 
 ## Installation
 
-En V1, uniquement par l'image GHCR et `deploy/compose.yaml`. Hivora Project est autonome : il n'a pas besoin de Hivora Panel pour être installé ou fonctionner.
+En V1, uniquement depuis les sources d'une release GitHub, avec `deploy/compose.yaml`. Hivora Project est autonome : il n'a pas besoin de Hivora Panel pour être installé ou fonctionner.
 
 ```sh
-HIVORA_PROJECT_VERSION=v0.1.0 HIVORA_PROJECT_BIND=192.0.2.10 \
-  docker compose -f deploy/compose.yaml up -d
+git clone --branch v0.1.0 https://github.com/hivora-suite/hivora-project.git
+cd hivora-project
+HIVORA_PROJECT_BIND=192.0.2.10 docker compose -f deploy/compose.yaml up -d --build
 ```
 
-L'application écoute uniquement sur l'adresse indiquée, port 8080. Indiquer une version publiée, jamais `latest`. Les données sont dans le volume Docker `hivora-project_data`.
+L'application écoute uniquement sur l'adresse indiquée, port 8080. Choisir une version publiée. Les données sont dans le volume Docker `hivora-project_data`.
 
 ## Sauvegarde et mise à jour
 
 - Avant toute migration, sauvegarde automatique de la base et du fichier de clé.
 - Une base plus récente que le code est refusée au démarrage.
-- Mise à jour : changer de version d'image, les migrations s'appliquent au démarrage.
-- Retour en arrière : restaurer la sauvegarde avec l'image précédente.
-
-## Visibilité de l'image
-
-Le paquet GHCR a sa propre visibilité, indépendante de celle du dépôt : il doit être public pour une installation sans jeton.
+- Mise à jour : récupérer la nouvelle release et relancer la construction, les migrations s'appliquent au démarrage.
+- Retour en arrière : restaurer la sauvegarde avec la version précédente.
 
 ## Conseils de durcissement
 

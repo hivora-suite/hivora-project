@@ -9,9 +9,10 @@ Détail du pipeline : `docs/deployment.md`.
 - Le conteneur n'est jamais `privileged` et ne monte que son dossier de données.
 - Aucune valeur réelle dans ce dossier : ni IP, ni domaine, ni secret. Exemples avec `example.com` et `192.0.2.0/24`.
 - Secrets de CI uniquement dans GitHub Actions.
+- Aucun paquet GHCR : uniquement des releases sur le dépôt, image construite à l'installation.
 
 ## Exigent un accord explicite
-Tag ou release, publication d'image.
+Tag ou release.
 
 ## Reprise du panel
 Copier, en lecture seule, `../hivora_panel/Dockerfile`, ses workflows CI, image et release, et `release-check.sh`. Dans la copie, retirer le binaire Compose, le catalogue, `install.sh` et tout accès au socket Docker.

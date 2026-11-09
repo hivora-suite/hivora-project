@@ -1,14 +1,14 @@
-# Hivora Project with Docker Compose.
+# Hivora Project with Docker Compose, built from the sources of a GitHub Release.
 #
-#   HIVORA_PROJECT_VERSION=v0.1.0 HIVORA_PROJECT_BIND=192.0.2.10 docker compose -f deploy/compose.yaml up -d
+#   HIVORA_PROJECT_BIND=192.0.2.10 docker compose -f deploy/compose.yaml up -d --build
 #
-# HIVORA_PROJECT_VERSION: a published release, never latest.
 # HIVORA_PROJECT_BIND: this machine's address; the application listens on it only.
 name: hivora-project
 
 services:
   app:
-    image: ghcr.io/hivora-suite/hivora-project:${HIVORA_PROJECT_VERSION:?set HIVORA_PROJECT_VERSION to a release, e.g. v0.1.0}
+    build: ..
+    image: hivora-project:local
     container_name: hivora-project
     restart: unless-stopped
     ports:

@@ -26,7 +26,8 @@ Une ligne par décision. Toutes datées du 09/11/2026.
 | D20 | Licence AGPL-3.0 | Cohérence avec le panel |
 | D21 | Vue liste et temps réel en V1.1 | V1 limitée |
 | D22 | Rôles : `admin` et `member` pour l'instance ; `manager`, `contributor`, `viewer` par projet (`permissions.md`) | Modèle simple |
-| D23 | V1 autonome : déploiement uniquement par image GHCR, documentation d'installation et `deploy/compose.yaml` ; Hivora Panel en lecture seule ; intégration au catalogue réévaluée après la V1 | Aucun impact sur le panel |
+| D23 | V1 autonome : déploiement uniquement par release GitHub, documentation d'installation et `deploy/compose.yaml` ; Hivora Panel en lecture seule ; intégration au catalogue réévaluée après la V1 | Aucun impact sur le panel |
 | D24 | Détection de secrets : `gitleaks` en CI ; contrôle local à motifs avant commit | Rien à installer sur la VM |
 | D25 | HTTP sur le port 8080 dans le conteneur, HTTPS par un reverse proxy en amont | Pas de gestion de certificats dans l'application |
 | D26 | Accent violet vif, neutres en noir et blanc purs | Identité propre, distincte du panel |
+| D27 | Aucun paquet GHCR : uniquement des releases sur le dépôt, image construite à l'installation | Choix de l'utilisateur, rien à publier hors du dépôt |
