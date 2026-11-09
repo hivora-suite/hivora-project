@@ -2,6 +2,8 @@
 
 ## [Non publié]
 
+- Historique des modifications de chaque carte.
+- Commentaires sur les cartes.
 - Cartes : dates, checklist, étiquettes, plusieurs membres ; animations fluides du Kanban.
 - Navigation : onglets du projet dans la barre latérale ; accès aux projets choisi depuis les comptes.
 - Tableau Kanban : glisser-déposer des tâches, déplacement au clavier, ordre des colonnes.

@@ -1,14 +1,14 @@
 # État du projet
 
-**Lot 6 terminé.**
+**Lot 7 terminé.**
 
 ## Fait
 
-Comptes, rôles, projets, colonnes, tâches, Kanban (glisser-déposer et alternative clavier). Projets dépliables dans la barre latérale, accès aux projets depuis les comptes.
+Comptes, rôles, projets, Kanban, cartes (dates, checklist, étiquettes, membres, historique), commentaires.
 
 ## Prochaine étape
 
-Lot 7 : Comments (`roadmap.md`).
+Lot 8 : Release V1 (`roadmap.md`), dont la revue de sécurité.
 
 ## Actions ouvertes (utilisateur)
 

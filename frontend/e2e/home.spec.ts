@@ -63,6 +63,22 @@ test("the admin signs in, replaces the initial password, creates an account, sig
   await dialog.getByRole("checkbox", { name: "Valider le budget" }).check();
   await expect(dialog.getByText("100%")).toBeVisible();
 
+  await dialog.getByLabel("Écrire un commentaire").fill("Budget à confirmer");
+  await dialog.getByRole("button", { name: "Commenter" }).click();
+  await expect(dialog.getByText("Budget à confirmer")).toBeVisible();
+  await dialog.getByRole("button", { name: "Modifier le commentaire" }).click();
+  await dialog.getByRole("textbox", { name: "Modifier le commentaire" }).fill("Budget validé");
+  await dialog.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(dialog.getByText("Budget validé")).toBeVisible();
+  await expect(dialog.getByText("modifié", { exact: true })).toBeVisible();
+
+  await dialog.getByRole("button", { name: "Log" }).click();
+  await expect(dialog.getByText("a créé la carte")).toBeVisible();
+  await expect(dialog.getByText("a coché « Valider le budget »")).toBeVisible();
+  await dialog.getByText("a modifié les membres").click();
+  await expect(dialog.locator("details[open]")).toContainText("camille");
+  await dialog.getByRole("button", { name: "Log" }).click();
+
   await dialog.getByRole("button", { name: "Modifier le titre" }).click();
   await dialog.getByLabel("Titre").fill("Rédiger le brief client");
   await dialog.getByLabel("Titre").press("Enter");

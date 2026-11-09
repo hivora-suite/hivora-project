@@ -14,6 +14,7 @@ from hivora_project.member.users_api import router as users_router
 from hivora_project.project.api import router as projects_router
 from hivora_project.runtime import Runtime
 from hivora_project.task.api import router as board_router
+from hivora_project.task.comments_api import router as comments_router
 from hivora_project.web import errors
 
 API_PREFIX = "/api/v1"
@@ -52,6 +53,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(users_router, prefix=f"{API_PREFIX}/users")
     app.include_router(projects_router, prefix=f"{API_PREFIX}/projects")
     app.include_router(board_router, prefix=f"{API_PREFIX}/projects")
+    app.include_router(comments_router, prefix=f"{API_PREFIX}/projects")
 
     @app.get(f"{API_PREFIX}/system/health")
     async def health() -> Health:

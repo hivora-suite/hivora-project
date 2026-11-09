@@ -1,6 +1,6 @@
 """Board routes (/api/v1/projects/{id}/...). Each action's role is checked by the service."""
 
-from datetime import date
+from datetime import date, datetime
 from typing import Annotated, Literal
 
 from fastapi import APIRouter
@@ -46,6 +46,16 @@ class TaskOut(BaseModel):
 class BoardOut(BaseModel):
     columns: list[ColumnOut]
     tasks: list[TaskOut]
+
+
+class TaskEventOut(BaseModel):
+    id: int
+    action: str
+    detail: str
+    old_value: str
+    new_value: str
+    author: str | None
+    created_at: datetime
 
 
 class ColumnCreateIn(BaseModel):
@@ -166,6 +176,24 @@ async def move_task(
 @router.delete("/{project_id}/tasks/{task_id}", status_code=204)
 async def delete_task(project_id: int, task_id: int, principal: Member, rt: RuntimeDep) -> None:
     await rt.tasks.delete_task(actor(principal), project_id, task_id)
+
+
+@router.get("/{project_id}/tasks/{task_id}/history")
+async def task_history(
+    project_id: int, task_id: int, principal: Member, rt: RuntimeDep
+) -> list[TaskEventOut]:
+    return [
+        TaskEventOut(
+            id=event.id,
+            action=event.action,
+            detail=event.detail,
+            old_value=event.old_value,
+            new_value=event.new_value,
+            author=author,
+            created_at=event.created_at,
+        )
+        for event, author in await rt.tasks.history(actor(principal), project_id, task_id)
+    ]
 
 
 @router.post("/{project_id}/tasks/{task_id}/checklist", status_code=204)

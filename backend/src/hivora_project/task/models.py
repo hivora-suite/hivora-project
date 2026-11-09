@@ -40,6 +40,30 @@ class ChecklistItem(Base):
     position: Mapped[int]
 
 
+class Comment(Base):
+    __tablename__ = "comment"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    task_id: Mapped[int] = mapped_column(ForeignKey("task.id", ondelete="CASCADE"), index=True)
+    author_id: Mapped[int | None] = mapped_column(ForeignKey("user.id", ondelete="SET NULL"))
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime)
+    edited_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+
+
+class TaskEvent(Base):
+    __tablename__ = "task_event"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    task_id: Mapped[int] = mapped_column(ForeignKey("task.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("user.id", ondelete="SET NULL"))
+    action: Mapped[str] = mapped_column(String(30))
+    detail: Mapped[str] = mapped_column(String(200), default="")
+    old_value: Mapped[str] = mapped_column(Text, default="")
+    new_value: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime)
+
+
 class Task(Base):
     __tablename__ = "task"
 

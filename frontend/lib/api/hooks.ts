@@ -15,6 +15,8 @@ import {
   type ProjectRole,
   type Role,
   type SessionInfo,
+  type TaskComment,
+  type TaskEvent,
   type User,
 } from "./client";
 
@@ -158,6 +160,21 @@ export const boardApi = {
     api<void>(`/projects/${id}/checklist/${itemId}`, { method: "DELETE" }),
   deleteTask: ({ id, taskId }: { id: number; taskId: number }) =>
     api<void>(`/projects/${id}/tasks/${taskId}`, { method: "DELETE" }),
+};
+
+export const useComments = (id: number, taskId: number) =>
+  useQuery({ queryKey: [...keys.projects, id, "comments", taskId], queryFn: () => api<TaskComment[]>(`/projects/${id}/tasks/${taskId}/comments`) });
+
+export const useTaskHistory = (id: number, taskId: number) =>
+  useQuery({ queryKey: [...keys.projects, id, "history", taskId], queryFn: () => api<TaskEvent[]>(`/projects/${id}/tasks/${taskId}/history`) });
+
+export const commentApi = {
+  add: ({ id, taskId, body }: { id: number; taskId: number; body: string }) =>
+    api<void>(`/projects/${id}/tasks/${taskId}/comments`, { method: "POST", body: { body } }),
+  edit: ({ id, commentId, body }: { id: number; commentId: number; body: string }) =>
+    api<void>(`/projects/${id}/comments/${commentId}`, { method: "PATCH", body: { body } }),
+  remove: ({ id, commentId }: { id: number; commentId: number }) =>
+    api<void>(`/projects/${id}/comments/${commentId}`, { method: "DELETE" }),
 };
 
 type Move = { taskId: number; column_id: number; position: number };

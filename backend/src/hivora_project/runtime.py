@@ -12,6 +12,7 @@ from hivora_project.core.db.engine import make_engine, make_sessionmaker
 from hivora_project.core.db.migrate import prepare_schema
 from hivora_project.member.service import AuthService
 from hivora_project.project.service import ProjectService
+from hivora_project.task.comments import CommentService
 from hivora_project.task.service import TaskService, create_default_columns, release_assignee
 
 
@@ -22,6 +23,7 @@ class Runtime:
     auth: AuthService
     projects: ProjectService
     tasks: TaskService
+    comments: CommentService
 
     @classmethod
     def build(cls, settings: Settings) -> "Runtime":
@@ -36,7 +38,8 @@ class Runtime:
             on_member_removed=release_assignee,
         )
         tasks = TaskService(sessions=sessions, clock=auth.clock)
-        return cls(settings, engine, auth, projects, tasks)
+        comments = CommentService(sessions=sessions, clock=auth.clock)
+        return cls(settings, engine, auth, projects, tasks, comments)
 
     async def start(self) -> None:
         await asyncio.to_thread(prepare_schema, self.settings)

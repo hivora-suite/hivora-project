@@ -14,6 +14,8 @@ export type Membership = Schemas["MembershipOut"];
 export type Board = Schemas["BoardOut"];
 export type BoardColumn = Schemas["ColumnOut"];
 export type BoardTask = Schemas["TaskOut"];
+export type TaskComment = Schemas["CommentOut"];
+export type TaskEvent = Schemas["TaskEventOut"];
 
 /** Error returned by the backend: `code` is stable and translated by the UI. */
 export class ApiError extends Error {

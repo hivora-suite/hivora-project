@@ -13,7 +13,8 @@ from hivora_project.member import access
 from hivora_project.member.access import Actor
 from hivora_project.member.models import ProjectRole
 from hivora_project.project.service import open_project
-from hivora_project.task.models import BoardColumn, ChecklistItem, Task, TaskAssignee
+from hivora_project.task import history
+from hivora_project.task.models import BoardColumn, ChecklistItem, Task, TaskAssignee, TaskEvent
 
 DEFAULT_COLUMNS = {
     "fr": ("À faire", "En cours", "Terminé"),
@@ -215,6 +216,8 @@ class TaskService:
                 updated_at=now,
             )
             session.add(task)
+            await session.flush()
+            await history.record(session, task.id, actor.user_id, "created", now)
             return task
 
     async def update_task(
@@ -224,6 +227,7 @@ class TaskService:
         async with self.sessions() as session, session.begin():
             await open_project(session, actor, project_id, ProjectRole.CONTRIBUTOR)
             task = await _task(session, project_id, task_id)
+            events = await history.card_changes(session, task, changes)
             start = changes.get("start_date", task.start_date)
             due = changes.get("due_date", task.due_date)
             if start and due and due < start:
@@ -233,6 +237,17 @@ class TaskService:
             for field, value in changes.items():
                 setattr(task, field, value)
             task.updated_at = self.clock.now()
+            for change in events:
+                await history.record(
+                    session,
+                    task.id,
+                    actor.user_id,
+                    change.action,
+                    task.updated_at,
+                    change.detail,
+                    old=change.old,
+                    new=change.new,
+                )
             return task
 
     async def move_task(
@@ -241,7 +256,19 @@ class TaskService:
         async with self.sessions() as session, session.begin():
             await open_project(session, actor, project_id, ProjectRole.CONTRIBUTOR)
             task = await _task(session, project_id, task_id)
-            await _column(session, project_id, column_id)
+            column = await _column(session, project_id, column_id)
+            if task.column_id != column_id:
+                previous = await _column(session, project_id, task.column_id)
+                await history.record(
+                    session,
+                    task.id,
+                    actor.user_id,
+                    "moved",
+                    self.clock.now(),
+                    column.name,
+                    old=previous.name,
+                    new=column.name,
+                )
             task.column_id = column_id
             task.updated_at = self.clock.now()
             place(await _column_tasks(session, column_id), task, position)
@@ -258,6 +285,9 @@ class TaskService:
             await open_project(session, actor, project_id, ProjectRole.CONTRIBUTOR)
             task = await _task(session, project_id, task_id)
             task.checklist.append(ChecklistItem(title=title, position=len(task.checklist)))
+            await history.record(
+                session, task.id, actor.user_id, "check_added", self.clock.now(), title
+            )
 
     async def update_item(
         self, actor: Actor, project_id: int, item_id: int, changes: dict[str, Any]
@@ -265,10 +295,28 @@ class TaskService:
         async with self.sessions() as session, session.begin():
             await open_project(session, actor, project_id, ProjectRole.CONTRIBUTOR)
             item = await _item(session, project_id, item_id)
+            if "done" in changes and changes["done"] != item.done:
+                action = "check_done" if changes["done"] else "check_undone"
+                await history.record(
+                    session, item.task_id, actor.user_id, action, self.clock.now(), item.title
+                )
             for field, value in changes.items():
                 setattr(item, field, value)
 
     async def delete_item(self, actor: Actor, project_id: int, item_id: int) -> None:
         async with self.sessions() as session, session.begin():
             await open_project(session, actor, project_id, ProjectRole.CONTRIBUTOR)
-            await session.delete(await _item(session, project_id, item_id))
+            item = await _item(session, project_id, item_id)
+            await history.record(
+                session, item.task_id, actor.user_id, "check_removed", self.clock.now(), item.title
+            )
+            await session.delete(item)
+
+    # --- history -------------------------------------------------------------
+    async def history(
+        self, actor: Actor, project_id: int, task_id: int
+    ) -> list[tuple[TaskEvent, str | None]]:
+        async with self.sessions() as session:
+            await open_project(session, actor, project_id, ProjectRole.VIEWER, writable=False)
+            await _task(session, project_id, task_id)
+            return await history.events(session, task_id)

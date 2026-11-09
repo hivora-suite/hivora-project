@@ -26,6 +26,7 @@ Modèle conceptuel. Le schéma réel vit dans les migrations Alembic, à partir 
 | `task` | identifiant, projet, colonne, titre, description, position, début, échéance, étiquettes, créateur, création, mise à jour |
 | `task_assignee` | tâche, utilisateur |
 | `checklist_item` | identifiant, tâche, titre, fait, position |
+| `task_event` | identifiant, tâche, utilisateur, action, détail, date |
 | `comment` | identifiant, tâche, auteur, texte, création, modification |
 
 Une tâche V1 n'a ni estimation ni dépendance.

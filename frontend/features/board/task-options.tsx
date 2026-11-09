@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, Tag, Users, type LucideIcon } from "lucide-react";
+import { Calendar, History, Tag, Users, type LucideIcon } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 import { Alert } from "@/components/ui/alert";
@@ -18,11 +18,13 @@ type Panel = "members" | "labels" | "dates";
 type LabelName = BoardTask["labels"][number];
 
 /** What changes rarely, behind small buttons; each change is saved at once. */
-export function TaskOptions({ projectId, task, members, canEdit }: {
+export function TaskOptions({ projectId, task, members, canEdit, logOpen, onToggleLog }: {
   projectId: number;
   task: BoardTask;
   members: ProjectMember[];
   canEdit: boolean;
+  logOpen: boolean;
+  onToggleLog: () => void;
 }) {
   const { t, lang, errorMessage } = useI18n();
   const [panel, setPanel] = useState<Panel | null>(null);
@@ -46,6 +48,9 @@ export function TaskOptions({ projectId, task, members, canEdit }: {
         {toggle("members", Users, t("board.assignees"), task.assignee_ids.length > 0 && <span className="font-mono text-xs">{task.assignee_ids.length}</span>)}
         {toggle("labels", Tag, t("board.labels"), task.labels.map((label) => <span key={label} className={cn("size-2.5 rounded-full", LABELS[label])} />))}
         {toggle("dates", Calendar, t("board.dates"), dates && <span className="text-xs text-muted-foreground">{dates}</span>)}
+        <Button type="button" variant="outline" size="sm" aria-expanded={logOpen} onClick={onToggleLog}>
+          <History /> {t("board.log")}
+        </Button>
       </div>
       <fieldset disabled={!canEdit}>
         {/* Kept mounted when folded: each form holds the state of its inputs. */}
