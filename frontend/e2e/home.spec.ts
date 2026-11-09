@@ -32,20 +32,94 @@ test("the admin signs in, replaces the initial password, creates an account, sig
   await page.getByRole("dialog").getByRole("button", { name: "Créer" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Site vitrine");
 
+  await page.getByRole("link", { name: "Membres" }).click();
   await page.locator("#candidate").selectOption({ label: "camille" });
   await page.getByRole("button", { name: "Ajouter", exact: true }).click();
   await expect(page.getByRole("cell", { name: "camille", exact: true })).toBeVisible();
 
+  await page.getByRole("link", { name: "Tableau" }).click();
   await page.getByLabel("Ajouter une tâche dans À faire").fill("Rédiger le brief");
   await page.getByLabel("Ajouter une tâche dans À faire").press("Enter");
-  await page.getByRole("button", { name: "Rédiger le brief" }).click();
-  await page.locator("#task-assignee").selectOption({ label: "camille" });
-  await page.getByRole("dialog").getByRole("button", { name: "Enregistrer" }).click();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Rédiger le brief camille" })).toBeVisible();
+  // The card: members, due date, label, then a checklist ticked off.
+  const card = page.locator("[data-task]", { hasText: "Rédiger le brief" });
+  await page.getByRole("button", { name: "Ouvrir Rédiger le brief" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Membres" }).click();
+  await dialog.getByRole("checkbox", { name: "camille" }).check();
+  await dialog.getByRole("button", { name: "Dates" }).click();
+  await page.locator("#task-due").fill("2030-06-15");
+  await dialog.getByRole("button", { name: "Étiquettes" }).click();
+  await dialog.locator("label", { has: page.getByRole("checkbox", { name: "Étiquette rouge" }) }).click();
+  await expect(dialog.getByRole("checkbox", { name: "Étiquette rouge" })).toBeChecked();
+  await page.getByRole("button", { name: "Fermer" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(card).toContainText("15 juin");
 
+  await page.getByRole("button", { name: "Ouvrir Rédiger le brief" }).click();
+  await dialog.getByRole("button", { name: "Membres" }).click();
+  await expect(dialog.getByRole("checkbox", { name: "camille" })).toBeChecked();
+  await dialog.getByLabel("Ajouter un élément").fill("Valider le budget");
+  await dialog.getByLabel("Ajouter un élément").press("Enter");
+  await dialog.getByRole("checkbox", { name: "Valider le budget" }).check();
+  await expect(dialog.getByText("100%")).toBeVisible();
+
+  await dialog.getByRole("button", { name: "Modifier le titre" }).click();
+  await dialog.getByLabel("Titre").fill("Rédiger le brief client");
+  await dialog.getByLabel("Titre").press("Enter");
+  await expect(dialog.getByRole("heading", { level: 2 })).toContainText("Rédiger le brief client");
+
+  // Saved without a button: after a pause, and when the card closes right away.
+  await page.locator("#task-description").fill("Cadrer les objectifs");
+  await dialog.getByRole("status", { name: "Modifications enregistrées" }).hover();
+  await expect(dialog.getByText("Modifications enregistrées")).toBeVisible();
+  await expect(dialog.getByRole("status")).toHaveCount(0, { timeout: 7000 });
+  await page.locator("#task-description").fill("Cadrer les objectifs du site");
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "Ouvrir Rédiger le brief" }).click();
+  await expect(page.locator("#task-description")).toHaveValue("Cadrer les objectifs du site");
+  await page.getByRole("button", { name: "Fermer" }).click();
+  await expect(card).toContainText("1/1");
+
+  const todo = page.getByRole("region", { name: "À faire" });
+  const doing = page.getByRole("region", { name: "En cours" });
+  await card.dragTo(doing);
+  await expect(doing.locator("[data-task]", { hasText: "Rédiger le brief" })).toBeVisible();
+
+  // The keyboard alternative: Alt + arrows, back to the first column.
+  await doing.getByRole("button", { name: "Ouvrir Rédiger le brief" }).press("Alt+ArrowLeft");
+  await expect(todo.locator("[data-task]", { hasText: "Rédiger le brief" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Actions de la colonne En cours" }).click();
+  await page.getByRole("menuitem", { name: "Déplacer à gauche" }).click();
+  await expect(page.getByRole("region").first()).toHaveAccessibleName("En cours");
+
+  // The accounts page chooses which projects an account can open.
+  await page.getByRole("link", { name: "Utilisateurs" }).click();
+  await page.getByRole("button", { name: "Actions pour camille" }).click();
+  await page.getByRole("menuitem", { name: "Accès aux projets" }).click();
+  await expect(page.getByLabel("Accès à Site vitrine")).toHaveValue("contributor");
+  await page.getByLabel("Accès à Site vitrine").selectOption("viewer");
+  await expect(page.getByLabel("Accès à Site vitrine")).toHaveValue("viewer");
+  await page.getByRole("button", { name: "Fermer" }).click();
+
+  await page.getByRole("link", { name: "Projets" }).click();
+  await page.getByRole("main").getByRole("link", { name: /Site vitrine/ }).click();
+
+  // The side menu lists every project; each one unfolds on demand.
+  await page.getByRole("button", { name: "Replier Site vitrine" }).click();
+  await expect(page.getByRole("link", { name: "Membres" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Tout déplier" }).click();
+  await expect(page.getByRole("link", { name: "Membres" })).toBeVisible();
+  await page.getByRole("button", { name: "Tout replier" }).click();
+  await expect(page.getByRole("link", { name: "Membres" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Déplier Site vitrine" }).click();
+
+  await page.getByRole("link", { name: "Configuration" }).click();
   await page.getByRole("button", { name: "Archiver" }).click();
   await expect(page.getByRole("button", { name: "Réactiver" })).toBeVisible();
+  await page.getByRole("link", { name: "Membres" }).click();
+  await expect(page.getByRole("cell", { name: "Lecteur" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Retirer camille du projet" })).toHaveCount(0);
 
   await page.getByRole("button", { name: "Se déconnecter" }).click();

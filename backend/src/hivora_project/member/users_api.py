@@ -6,7 +6,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from hivora_project.member.api import SessionOut
-from hivora_project.member.models import Role, User
+from hivora_project.member.models import ProjectRole, Role, User
 from hivora_project.web.deps import Admin, RuntimeDep
 
 router = APIRouter(tags=["users"])
@@ -21,6 +21,11 @@ class UserOut(BaseModel):
     totp_enabled: bool
     created_at: datetime
     last_login_at: datetime | None
+
+
+class MembershipOut(BaseModel):
+    project_id: int
+    role: ProjectRole
 
 
 class UserCreateIn(BaseModel):
@@ -80,6 +85,14 @@ async def reset_password(user_id: int, body: TemporaryPasswordIn, _: Admin, rt: 
 @router.post("/{user_id}/totp/reset", status_code=204)
 async def reset_totp(user_id: int, _: Admin, rt: RuntimeDep) -> None:
     await rt.auth.users.reset_totp(user_id)
+
+
+@router.get("/{user_id}/projects")
+async def user_projects(user_id: int, _: Admin, rt: RuntimeDep) -> list[MembershipOut]:
+    return [
+        MembershipOut(project_id=m.project_id, role=m.role)
+        for m in await rt.auth.users.memberships(user_id)
+    ]
 
 
 @router.get("/{user_id}/sessions")

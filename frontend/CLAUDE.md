@@ -13,7 +13,8 @@ Next.js en `output: export`, React, TypeScript, Tailwind, TanStack Query. Copie 
 ## À réutiliser avant de créer
 - `components/ui/*` : alert, badge, button, card, dialog, dropdown-menu, input, sheet, skeleton, table.
 - `components/` : app-shell (`PageHeader`, `useSession`), brand, code-view, copy, entering-screen, grid-background, providers, shelf-cat.
-- `features/account/` : password-form, totp-card.
+- `features/account/` : password-form, totp-card. `features/projects/` : `ProjectScreen`, onglets. `features/board/` : tableau.
+- Une page de projet est un onglet : `app/(panel)/project/<onglet>/`, déclaré dans `project-nav.tsx`.
 - `lib/` : `api/client.ts`, `i18n`, `prefs.ts`, `utils.ts`.
 
 ## Copie depuis le panel (lecture seule)

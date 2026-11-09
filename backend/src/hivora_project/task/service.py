@@ -1,10 +1,10 @@
-"""Columns and tasks of a project's board."""
+"""Columns and cards of a project's board."""
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Any, Protocol
 
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from hivora_project.core.clock import Clock
@@ -13,7 +13,7 @@ from hivora_project.member import access
 from hivora_project.member.access import Actor
 from hivora_project.member.models import ProjectRole
 from hivora_project.project.service import open_project
-from hivora_project.task.models import BoardColumn, Task
+from hivora_project.task.models import BoardColumn, ChecklistItem, Task, TaskAssignee
 
 DEFAULT_COLUMNS = {
     "fr": ("À faire", "En cours", "Terminé"),
@@ -29,6 +29,10 @@ class ColumnNotFoundError(NotFoundError):
     code = "column_not_found"
 
 
+class ChecklistItemNotFoundError(NotFoundError):
+    code = "checklist_item_not_found"
+
+
 class ColumnNotEmptyError(ConflictError):
     code = "column_not_empty"
 
@@ -39,6 +43,10 @@ class LastColumnError(ConflictError):
 
 class AssigneeNotMemberError(ValidationError):
     code = "assignee_not_member"
+
+
+class InvalidDatesError(ValidationError):
+    code = "invalid_dates"
 
 
 class Positioned(Protocol):
@@ -63,9 +71,10 @@ async def create_default_columns(session: AsyncSession, project_id: int, languag
 
 async def release_assignee(session: AsyncSession, project_id: int, user_id: int) -> None:
     await session.execute(
-        update(Task)
-        .where(Task.project_id == project_id, Task.assignee_id == user_id)
-        .values(assignee_id=None)
+        delete(TaskAssignee).where(
+            TaskAssignee.user_id == user_id,
+            TaskAssignee.task_id.in_(select(Task.id).where(Task.project_id == project_id)),
+        )
     )
 
 
@@ -99,9 +108,23 @@ async def _task(session: AsyncSession, project_id: int, task_id: int) -> Task:
     return task
 
 
-async def _check_assignee(session: AsyncSession, project_id: int, user_id: int | None) -> None:
-    if user_id is not None and not await access.is_member(session, project_id, user_id):
-        raise AssigneeNotMemberError("the assignee must be a member of the project")
+async def _item(session: AsyncSession, project_id: int, item_id: int) -> ChecklistItem:
+    item = await session.get(ChecklistItem, item_id)
+    task = await session.get(Task, item.task_id) if item else None
+    if item is None or task is None or task.project_id != project_id:
+        raise ChecklistItemNotFoundError(str(item_id))
+    return item
+
+
+async def _set_assignees(session: AsyncSession, task: Task, user_ids: Iterable[int]) -> None:
+    wanted = list(dict.fromkeys(user_ids))
+    for user_id in wanted:
+        if not await access.is_member(session, task.project_id, user_id):
+            raise AssigneeNotMemberError("assignees must be members of the project")
+    # Rows that stay are kept: the same key cannot be deleted and inserted in one flush.
+    kept = [a for a in task.assignees if a.user_id in wanted]
+    present = {a.user_id for a in kept}
+    task.assignees = kept + [TaskAssignee(user_id=u) for u in wanted if u not in present]
 
 
 @dataclass(frozen=True, slots=True)
@@ -163,20 +186,12 @@ class TaskService:
                 raise LastColumnError("a board needs at least one column")
             await session.delete(column)
 
-    # --- tasks ---------------------------------------------------------------
+    # --- cards ---------------------------------------------------------------
     async def create_task(
-        self,
-        actor: Actor,
-        project_id: int,
-        *,
-        title: str,
-        description: str,
-        column_id: int | None,
-        assignee_id: int | None,
+        self, actor: Actor, project_id: int, *, title: str, description: str, column_id: int | None
     ) -> Task:
         async with self.sessions() as session, session.begin():
             await open_project(session, actor, project_id, ProjectRole.CONTRIBUTOR)
-            await _check_assignee(session, project_id, assignee_id)
             target = (
                 (await _columns(session, project_id))[0].id
                 if column_id is None
@@ -192,7 +207,9 @@ class TaskService:
                 title=title,
                 description=description,
                 position=position or 0,
-                assignee_id=assignee_id,
+                labels=[],
+                assignees=[],
+                checklist=[],
                 created_by=actor.user_id,
                 created_at=now,
                 updated_at=now,
@@ -201,14 +218,18 @@ class TaskService:
             return task
 
     async def update_task(
-        self, actor: Actor, project_id: int, task_id: int, changes: dict[str, object]
+        self, actor: Actor, project_id: int, task_id: int, changes: dict[str, Any]
     ) -> Task:
-        """``changes``: only the fields sent; ``assignee_id`` may be None (unassigned)."""
+        """``changes``: only the fields sent."""
         async with self.sessions() as session, session.begin():
             await open_project(session, actor, project_id, ProjectRole.CONTRIBUTOR)
             task = await _task(session, project_id, task_id)
-            if "assignee_id" in changes:
-                await _check_assignee(session, project_id, changes["assignee_id"])  # type: ignore[arg-type]
+            start = changes.get("start_date", task.start_date)
+            due = changes.get("due_date", task.due_date)
+            if start and due and due < start:
+                raise InvalidDatesError("the due date is before the start date")
+            if "assignee_ids" in changes:
+                await _set_assignees(session, task, changes.pop("assignee_ids"))
             for field, value in changes.items():
                 setattr(task, field, value)
             task.updated_at = self.clock.now()
@@ -230,3 +251,24 @@ class TaskService:
         async with self.sessions() as session, session.begin():
             await open_project(session, actor, project_id, ProjectRole.MANAGER)
             await session.delete(await _task(session, project_id, task_id))
+
+    # --- checklist -----------------------------------------------------------
+    async def add_item(self, actor: Actor, project_id: int, task_id: int, title: str) -> None:
+        async with self.sessions() as session, session.begin():
+            await open_project(session, actor, project_id, ProjectRole.CONTRIBUTOR)
+            task = await _task(session, project_id, task_id)
+            task.checklist.append(ChecklistItem(title=title, position=len(task.checklist)))
+
+    async def update_item(
+        self, actor: Actor, project_id: int, item_id: int, changes: dict[str, Any]
+    ) -> None:
+        async with self.sessions() as session, session.begin():
+            await open_project(session, actor, project_id, ProjectRole.CONTRIBUTOR)
+            item = await _item(session, project_id, item_id)
+            for field, value in changes.items():
+                setattr(item, field, value)
+
+    async def delete_item(self, actor: Actor, project_id: int, item_id: int) -> None:
+        async with self.sessions() as session, session.begin():
+            await open_project(session, actor, project_id, ProjectRole.CONTRIBUTOR)
+            await session.delete(await _item(session, project_id, item_id))

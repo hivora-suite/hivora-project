@@ -10,6 +10,7 @@ export type Project = Schemas["ProjectOut"];
 export type ProjectRole = Project["role"];
 export type ProjectMember = Schemas["MemberOut"];
 export type Candidate = Schemas["CandidateOut"];
+export type Membership = Schemas["MembershipOut"];
 export type Board = Schemas["BoardOut"];
 export type BoardColumn = Schemas["ColumnOut"];
 export type BoardTask = Schemas["TaskOut"];

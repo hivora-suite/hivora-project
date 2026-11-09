@@ -15,7 +15,9 @@ Toute interaction se vérifie contre cette liste avant d'être conçue.
 
 - Un nouveau projet reçoit des colonnes par défaut, modifiables ensuite.
 - Sur le Kanban, ajouter une tâche se fait directement dans la colonne.
-- Déplacer une tâche : glisser-déposer, ou action « Déplacer vers » au clavier.
+- Déplacer une tâche : glisser-déposer, ou Alt + flèches sur son bouton d'ouverture.
+- Sur une carte, ce qui change rarement (membres, étiquettes, dates) est derrière de petits boutons.
+- Une carte s'enregistre seule ; une icône indique l'état, détaillé au survol, et la coche disparaît après 5 s.
 - Une action destructive indique ce qui sera supprimé et demande confirmation.
 
 ## Textes

@@ -30,6 +30,7 @@ SQLite WAL en V1, compatibilité PostgreSQL obligatoire.
 - Types explicites et portables pour les identifiants, les dates (UTC) et les booléens.
 - SQL isolé dans chaque contexte : changer de moteur ne touche pas la logique métier.
 - Le mode WAL et l'activation des clés étrangères se règlent à la connexion, jamais dans une migration.
+- Sous SQLite, `batch_alter_table` recrée la table : les lignes filles en `ON DELETE CASCADE` sont effacées. Les sauvegarder et les réinsérer après, et tester la migration avec des données.
 
 ## Classification des informations
 

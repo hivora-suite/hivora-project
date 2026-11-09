@@ -33,7 +33,7 @@ export function DialogContent({
             <D.Title className="text-lg font-semibold">{title}</D.Title>
             {description && <D.Description className="text-sm text-muted-foreground">{description}</D.Description>}
           </div>
-          <D.Close className="rounded-sm opacity-70 hover:opacity-100" aria-label={closeLabel}>
+          <D.Close className="mt-1.5 rounded-sm opacity-70 hover:opacity-100" aria-label={closeLabel}>
             <X className="size-4" />
           </D.Close>
         </div>

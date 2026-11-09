@@ -23,10 +23,12 @@ Modèle conceptuel. Le schéma réel vit dans les migrations Alembic, à partir 
 | `project` | identifiant, nom, description, créateur, création, archivage (réversible) |
 | `project_member` | projet, utilisateur, rôle de projet |
 | `board_column` | identifiant, projet, nom, position |
-| `task` | identifiant, projet, colonne, titre, description, position, assigné, créateur, création, mise à jour |
+| `task` | identifiant, projet, colonne, titre, description, position, début, échéance, étiquettes, créateur, création, mise à jour |
+| `task_assignee` | tâche, utilisateur |
+| `checklist_item` | identifiant, tâche, titre, fait, position |
 | `comment` | identifiant, tâche, auteur, texte, création, modification |
 
-Une tâche V1 n'a ni date, ni estimation, ni dépendance.
+Une tâche V1 n'a ni estimation ni dépendance.
 
 ## Invariants
 
@@ -44,7 +46,8 @@ Une tâche V1 n'a ni date, ni estimation, ni dépendance.
 **Tâches**
 
 - La colonne d'une tâche appartient au projet de la tâche.
-- L'assigné d'une tâche est membre de son projet.
+- Les assignés d'une tâche sont membres de son projet.
+- L'échéance n'est pas antérieure au début.
 - Retirer un membre d'un projet libère ses tâches assignées.
 - Une colonne non vide ne peut pas être supprimée, ni la dernière d'un tableau.
 - L'ordre des colonnes et des tâches est déterminé par `position`.

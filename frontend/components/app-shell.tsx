@@ -3,12 +3,13 @@
 import { LayoutGrid, LogOut, Menu, Settings, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { Suspense, createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 import { useQuery } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ProjectNav } from "@/features/projects/project-nav";
 import { ApiError, api, type Me, type Role } from "@/lib/api/client";
 import { useLogout, useMe } from "@/lib/api/hooks";
 import { useI18n, type MessageKey } from "@/lib/i18n";
@@ -40,20 +41,27 @@ const NAV: NavItem[] = [
   { href: "/settings/", label: "nav.settings", icon: Settings, role: "member" },
 ];
 
-const LINK = "relative flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md px-2 py-1 text-sm transition-[background-color,color,box-shadow,translate] duration-200 ease-out";
+const LINK = "relative flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md px-2 py-1.5 text-sm transition-[background-color,color,box-shadow,translate] duration-200 ease-out";
 const LINK_ON = "surface font-medium before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-primary";
 const LINK_OFF = "text-muted-foreground hover:translate-x-0.5 hover:bg-muted hover:text-foreground";
 
 function NavTree({ pathname, can }: { pathname: string; can: (role: Role) => boolean }) {
   const { t } = useI18n();
   return (
-    <nav aria-label={t("nav.menu")} className="flex flex-col gap-1">
+    <nav aria-label={t("nav.menu")} className="flex flex-col gap-2">
       {NAV.filter((n) => can(n.role)).map((n) => {
         const active = n.href === "/" ? pathname === "/" || pathname.startsWith("/project/") : pathname.startsWith(n.href);
-        return (
-          <Link key={n.href} href={n.href} aria-current={active ? "page" : undefined} className={cn(LINK, active ? LINK_ON : LINK_OFF)}>
+        const link = (
+          <Link key={n.href} href={n.href} aria-current={pathname === n.href ? "page" : undefined} className={cn(LINK, active ? LINK_ON : LINK_OFF)}>
             <n.icon className="size-4 shrink-0" /> {t(n.label)}
           </Link>
+        );
+        return n.href === "/" ? (
+          <Suspense key={n.href} fallback={link}>
+            <ProjectNav link={link} />
+          </Suspense>
+        ) : (
+          link
         );
       })}
     </nav>
@@ -114,8 +122,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <SessionContext.Provider value={session}>
       <div className="flex min-h-screen flex-col md:flex-row">
-        <aside className="relative z-10 flex shrink-0 flex-col gap-1 border-b bg-sidebar p-3 shadow-md md:sticky md:top-0 md:h-screen md:w-56 md:border-b-0 md:border-r">
-          <div className="relative mb-1 flex items-center justify-center">
+        <aside className="relative z-10 flex shrink-0 flex-col gap-1 border-b bg-sidebar p-3 shadow-lg md:sticky md:top-0 md:h-screen md:w-56 md:border-b-0 md:border-r">
+          <div className="relative mb-4 flex items-center justify-center">
             <Link href="/" aria-label="Hivora Project" className="rounded-md px-2 py-1">
               <Brand />
             </Link>
@@ -133,7 +141,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Sheet>
             </div>
           </div>
-          <div className="hidden md:block">
+          <div className="hidden min-h-0 flex-1 overflow-y-auto md:block">
             <NavTree pathname={pathname} can={session.can} />
           </div>
           <div className="mt-auto hidden flex-col gap-2 px-2 pt-3 md:flex">

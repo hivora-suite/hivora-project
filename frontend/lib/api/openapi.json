@@ -43,6 +43,29 @@
         "title": "CandidateOut",
         "type": "object"
       },
+      "ChecklistItemOut": {
+        "properties": {
+          "done": {
+            "title": "Done",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "done"
+        ],
+        "title": "ChecklistItemOut",
+        "type": "object"
+      },
       "CodeIn": {
         "properties": {
           "code": {
@@ -162,6 +185,37 @@
         "title": "Health",
         "type": "object"
       },
+      "ItemCreateIn": {
+        "properties": {
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "ItemCreateIn",
+        "type": "object"
+      },
+      "ItemUpdateIn": {
+        "properties": {
+          "done": {
+            "title": "Done",
+            "type": "boolean"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "title": "ItemUpdateIn",
+        "type": "object"
+      },
       "LoginIn": {
         "properties": {
           "password": {
@@ -264,6 +318,23 @@
           "role"
         ],
         "title": "MemberRoleIn",
+        "type": "object"
+      },
+      "MembershipOut": {
+        "properties": {
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer"
+          },
+          "role": {
+            "$ref": "#/components/schemas/ProjectRole"
+          }
+        },
+        "required": [
+          "project_id",
+          "role"
+        ],
+        "title": "MembershipOut",
         "type": "object"
       },
       "PasswordConfirmIn": {
@@ -488,17 +559,6 @@
       },
       "TaskCreateIn": {
         "properties": {
-          "assignee_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Assignee Id"
-          },
           "column_id": {
             "anyOf": [
               {
@@ -550,16 +610,19 @@
       },
       "TaskOut": {
         "properties": {
-          "assignee_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Assignee Id"
+          "assignee_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Assignee Ids",
+            "type": "array"
+          },
+          "checklist": {
+            "items": {
+              "$ref": "#/components/schemas/ChecklistItemOut"
+            },
+            "title": "Checklist",
+            "type": "array"
           },
           "column_id": {
             "title": "Column Id",
@@ -569,13 +632,52 @@
             "title": "Description",
             "type": "string"
           },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
           "id": {
             "title": "Id",
             "type": "integer"
           },
+          "labels": {
+            "items": {
+              "enum": [
+                "green",
+                "blue",
+                "amber",
+                "red",
+                "violet",
+                "gray"
+              ],
+              "type": "string"
+            },
+            "title": "Labels",
+            "type": "array"
+          },
           "position": {
             "title": "Position",
             "type": "integer"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
           },
           "title": {
             "title": "Title",
@@ -588,28 +690,68 @@
           "title",
           "description",
           "position",
-          "assignee_id"
+          "start_date",
+          "due_date",
+          "labels",
+          "assignee_ids",
+          "checklist"
         ],
         "title": "TaskOut",
         "type": "object"
       },
       "TaskUpdateIn": {
+        "description": "Only the fields sent change; the dates may be null to clear them.",
         "properties": {
-          "assignee_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Assignee Id"
+          "assignee_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Assignee Ids",
+            "type": "array"
           },
           "description": {
             "maxLength": 5000,
             "title": "Description",
             "type": "string"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "labels": {
+            "items": {
+              "enum": [
+                "green",
+                "blue",
+                "amber",
+                "red",
+                "violet",
+                "gray"
+              ],
+              "type": "string"
+            },
+            "title": "Labels",
+            "type": "array"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
           },
           "title": {
             "maxLength": 200,
@@ -1384,6 +1526,102 @@
         ]
       }
     },
+    "/api/v1/projects/{project_id}/checklist/{item_id}": {
+      "delete": {
+        "operationId": "delete_item_api_v1_projects__project_id__checklist__item_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "title": "Item Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Item",
+        "tags": [
+          "board"
+        ]
+      },
+      "patch": {
+        "operationId": "update_item_api_v1_projects__project_id__checklist__item_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "title": "Item Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemUpdateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Item",
+        "tags": [
+          "board"
+        ]
+      }
+    },
     "/api/v1/projects/{project_id}/columns": {
       "post": {
         "operationId": "create_column_api_v1_projects__project_id__columns_post",
@@ -1836,6 +2074,60 @@
         ]
       }
     },
+    "/api/v1/projects/{project_id}/tasks/{task_id}/checklist": {
+      "post": {
+        "operationId": "add_item_api_v1_projects__project_id__tasks__task_id__checklist_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemCreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Item",
+        "tags": [
+          "board"
+        ]
+      }
+    },
     "/api/v1/projects/{project_id}/tasks/{task_id}/move": {
       "post": {
         "operationId": "move_task_api_v1_projects__project_id__tasks__task_id__move_post",
@@ -2147,6 +2439,52 @@
           }
         },
         "summary": "Reset Password",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/{user_id}/projects": {
+      "get": {
+        "operationId": "user_projects_api_v1_users__user_id__projects_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MembershipOut"
+                  },
+                  "title": "Response User Projects Api V1 Users  User Id  Projects Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "User Projects",
         "tags": [
           "users"
         ]

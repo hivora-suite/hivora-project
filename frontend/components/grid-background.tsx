@@ -186,7 +186,7 @@ export function GridBackground() {
     <canvas
       ref={canvasRef}
       aria-hidden
-      className="pointer-events-none fixed inset-0 -z-10 size-full [mask-image:radial-gradient(900px_circle_at_50%_35%,white,transparent)]"
+      className="pointer-events-none fixed inset-0 -z-10 size-full [mask-image:linear-gradient(to_bottom,transparent_90px,white_280px)]"
     />
   );
 }

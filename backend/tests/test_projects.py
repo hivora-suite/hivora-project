@@ -142,3 +142,17 @@ def test_a_name_is_required(client: TestClient) -> None:
     headers = sign_in(client, "alice")
     assert client.post(P, json={"name": "   "}, headers=headers).status_code == 422
     assert client.patch(f"{P}/{project_id}", json={"name": ""}, headers=headers).status_code == 422
+
+
+def test_an_admin_chooses_the_projects_of_an_account(client: TestClient) -> None:
+    project_id, _, bob = setup_project(client)
+    admin = sign_in(client, "admin")
+    route = f"/api/v1/users/{bob}/projects"
+    assert client.get(route).json() == []
+    client.put(f"{P}/{project_id}/members/{bob}", json={"role": "viewer"}, headers=admin)
+    assert client.get(route).json() == [{"project_id": project_id, "role": "viewer"}]
+    client.delete(f"{P}/{project_id}/members/{bob}", headers=admin)
+    assert client.get(route).json() == []
+    assert client.get("/api/v1/users/9999/projects").status_code == 404
+    sign_in(client, "bob")
+    assert client.get(route).status_code == 403

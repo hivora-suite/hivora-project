@@ -29,8 +29,11 @@ Une ligne par décision. Toutes datées du 09/11/2026.
 | D23 | V1 autonome : déploiement uniquement par release GitHub, documentation d'installation et `deploy/compose.yaml` ; Hivora Panel en lecture seule ; intégration au catalogue réévaluée après la V1 | Aucun impact sur le panel |
 | D24 | Détection de secrets : `gitleaks` en CI ; contrôle local à motifs avant commit | Rien à installer sur la VM |
 | D25 | HTTP sur le port 8080 dans le conteneur, HTTPS par un reverse proxy en amont | Pas de gestion de certificats dans l'application |
-| D26 | Accent violet vif, neutres en noir et blanc purs | Identité propre, distincte du panel |
+| D26 | Accent violet vif, neutres noir et blanc sans teinte, blancs adoucis | Identité propre, distincte du panel |
 | D27 | Aucun paquet GHCR : uniquement des releases sur le dépôt, image construite à l'installation | Choix de l'utilisateur, rien à publier hors du dépôt |
 | D28 | Cookie `Secure` en mode `public` seulement ; en `lan`, accès direct en HTTP | L'application ne gère pas TLS (D25), un cookie `Secure` bloquerait la connexion en HTTP |
 | D29 | Compte identifié par un nom d'utilisateur, sans e-mail ; codes de secours stockés sur le compte | Reprise du modèle du panel, pas d'envoi d'e-mail en V1 |
 | D30 | Effets d'un contexte sur un autre par rappels fournis à l'assemblage, pas de bus d'événements en V1 | Pas de dépendance inverse, sans mécanisme de plus |
+| D31 | Glisser-déposer natif du navigateur, sans bibliothèque ; alternative clavier Alt + flèches | Aucune dépendance, accessible |
+| D32 | Liste des projets en blocs ; tous les projets listés dans la barre latérale, chacun dépliable (+) vers ses onglets Tableau, Membres, Configuration, avec Tout déplier / Tout replier ; la page des comptes attribue aussi l'accès aux projets | Demande de l'utilisateur : fonctionnalités séparées de la configuration |
+| D33 | Dates, checklist, étiquettes et plusieurs assignés avancés en V1, sur la carte (contexte Task) ; le calendrier reste en V1.2 | Demande de l'utilisateur, cartes proches de Trello |

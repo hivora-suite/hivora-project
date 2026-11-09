@@ -1,5 +1,5 @@
 /** Per-browser preferences (language, theme, sheet width). Storage may be unavailable. */
-export type PrefKey = "lang" | "theme" | `sheet.${string}`;
+export type PrefKey = "lang" | "theme" | "nav.projects" | `sheet.${string}`;
 
 export function readPref(key: PrefKey): string | null {
   try {

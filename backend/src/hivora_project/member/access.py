@@ -75,6 +75,12 @@ async def list_members(session: AsyncSession, project_id: int) -> list[MemberInf
     return [MemberInfo(*row) for row in rows]
 
 
+async def list_memberships(session: AsyncSession, user_id: int) -> list[ProjectMember]:
+    return list(
+        await session.scalars(select(ProjectMember).where(ProjectMember.user_id == user_id))
+    )
+
+
 async def list_candidates(session: AsyncSession, project_id: int) -> list[User]:
     """Active accounts not yet in the project."""
     members = select(ProjectMember.user_id).where(ProjectMember.project_id == project_id)

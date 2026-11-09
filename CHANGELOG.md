@@ -2,6 +2,9 @@
 
 ## [Non publié]
 
+- Cartes : dates, checklist, étiquettes, plusieurs membres ; animations fluides du Kanban.
+- Navigation : onglets du projet dans la barre latérale ; accès aux projets choisi depuis les comptes.
+- Tableau Kanban : glisser-déposer des tâches, déplacement au clavier, ordre des colonnes.
 - Tâches et colonnes : création, assignation, colonnes par défaut.
 - Projets : création, membres et rôles par projet, archivage.
 - Comptes et connexion : mots de passe, sessions, double authentification, codes de secours, rôles.

@@ -1,9 +1,9 @@
-"""Board columns and tasks."""
+"""Board columns and task cards."""
 
-from datetime import datetime
+from datetime import date, datetime
 
-from sqlalchemy import ForeignKey, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import JSON, Date, ForeignKey, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from hivora_project.core.db.base import Base, UTCDateTime
 
@@ -19,6 +19,27 @@ class BoardColumn(Base):
     position: Mapped[int]
 
 
+class TaskAssignee(Base):
+    __tablename__ = "task_assignee"
+
+    task_id: Mapped[int] = mapped_column(
+        ForeignKey("task.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("user.id", ondelete="CASCADE"), primary_key=True, index=True
+    )
+
+
+class ChecklistItem(Base):
+    __tablename__ = "checklist_item"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    task_id: Mapped[int] = mapped_column(ForeignKey("task.id", ondelete="CASCADE"), index=True)
+    title: Mapped[str] = mapped_column(String(200))
+    done: Mapped[bool] = mapped_column(default=False)
+    position: Mapped[int]
+
+
 class Task(Base):
     __tablename__ = "task"
 
@@ -30,7 +51,19 @@ class Task(Base):
     title: Mapped[str] = mapped_column(String(200))
     description: Mapped[str] = mapped_column(Text, default="")
     position: Mapped[int]
-    assignee_id: Mapped[int | None] = mapped_column(ForeignKey("user.id", ondelete="SET NULL"))
+    start_date: Mapped[date | None] = mapped_column(Date)
+    due_date: Mapped[date | None] = mapped_column(Date)
+    labels: Mapped[list[str]] = mapped_column(JSON, default=list)
     created_by: Mapped[int | None] = mapped_column(ForeignKey("user.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(UTCDateTime)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime)
+
+    assignees: Mapped[list[TaskAssignee]] = relationship(
+        lazy="selectin", cascade="all, delete-orphan", passive_deletes=True
+    )
+    checklist: Mapped[list[ChecklistItem]] = relationship(
+        lazy="selectin",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        order_by=ChecklistItem.position,
+    )

@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input, Label, Select } from "@/components/ui/input";
 import { TBody, THead, Table, Td, Th, Tr } from "@/components/ui/table";
+import { ProjectAccessDialog } from "@/features/projects/project-access-dialog";
 import type { Role, User } from "@/lib/api/client";
 import { userApi, useUserMutation, useUsers } from "@/lib/api/hooks";
 import { useI18n } from "@/lib/i18n";
@@ -111,6 +112,7 @@ export default function UsersPage() {
   const { data: users } = useUsers();
   const [creating, setCreating] = useState(false);
   const [resetting, setResetting] = useState<User | null>(null);
+  const [access, setAccess] = useState<User | null>(null);
   const update = useUserMutation(userApi.update);
   const remove = useUserMutation(userApi.remove);
   const resetTotp = useUserMutation(userApi.resetTotp);
@@ -165,6 +167,7 @@ export default function UsersPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
+                    <DropdownMenuItem onSelect={() => setAccess(u)}>{t("users.projects")}</DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => setResetting(u)}>{t("users.resetPassword")}</DropdownMenuItem>
                     <DropdownMenuItem disabled={!u.totp_enabled} onSelect={() => resetTotp.mutate(u.id)}>
                       {t("users.resetTotp")}
@@ -195,6 +198,7 @@ export default function UsersPage() {
       </Table>
       <CreateUserDialog open={creating} onOpenChange={setCreating} />
       <ResetPasswordDialog user={resetting} onClose={() => setResetting(null)} />
+      <ProjectAccessDialog user={access} onClose={() => setAccess(null)} />
     </>
   );
 }

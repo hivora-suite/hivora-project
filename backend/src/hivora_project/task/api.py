@@ -1,6 +1,7 @@
 """Board routes (/api/v1/projects/{id}/...). Each action's role is checked by the service."""
 
-from typing import Annotated
+from datetime import date
+from typing import Annotated, Literal
 
 from fastapi import APIRouter
 from pydantic import BaseModel, Field, StringConstraints
@@ -14,6 +15,7 @@ router = APIRouter(tags=["board"])
 Title = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 ColumnName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=60)]
 Position = Annotated[int, Field(ge=0)]
+LabelColor = Literal["green", "blue", "amber", "red", "violet", "gray"]
 
 
 class ColumnOut(BaseModel):
@@ -22,13 +24,23 @@ class ColumnOut(BaseModel):
     position: int
 
 
+class ChecklistItemOut(BaseModel):
+    id: int
+    title: str
+    done: bool
+
+
 class TaskOut(BaseModel):
     id: int
     column_id: int
     title: str
     description: str
     position: int
-    assignee_id: int | None
+    start_date: date | None
+    due_date: date | None
+    labels: list[LabelColor]
+    assignee_ids: list[int]
+    checklist: list[ChecklistItemOut]
 
 
 class BoardOut(BaseModel):
@@ -49,18 +61,31 @@ class TaskCreateIn(BaseModel):
     title: Title
     description: Description = ""
     column_id: int | None = None
-    assignee_id: int | None = None
 
 
 class TaskUpdateIn(BaseModel):
+    """Only the fields sent change; the dates may be null to clear them."""
+
     title: Title = Field(default=None)  # type: ignore[assignment]
     description: Description = Field(default=None)  # type: ignore[assignment]
-    assignee_id: int | None = None
+    start_date: date | None = None
+    due_date: date | None = None
+    labels: list[LabelColor] = Field(default=None)  # type: ignore[arg-type]
+    assignee_ids: list[int] = Field(default=None)  # type: ignore[arg-type]
 
 
 class TaskMoveIn(BaseModel):
     column_id: int
     position: Position
+
+
+class ItemCreateIn(BaseModel):
+    title: Title
+
+
+class ItemUpdateIn(BaseModel):
+    title: Title = Field(default=None)  # type: ignore[assignment]
+    done: bool = Field(default=None)  # type: ignore[assignment]
 
 
 def column_out(c: BoardColumn) -> ColumnOut:
@@ -74,7 +99,11 @@ def task_out(t: Task) -> TaskOut:
         title=t.title,
         description=t.description,
         position=t.position,
-        assignee_id=t.assignee_id,
+        start_date=t.start_date,
+        due_date=t.due_date,
+        labels=t.labels,  # type: ignore[arg-type]
+        assignee_ids=[a.user_id for a in t.assignees],
+        checklist=[ChecklistItemOut(id=i.id, title=i.title, done=i.done) for i in t.checklist],
     )
 
 
@@ -137,3 +166,24 @@ async def move_task(
 @router.delete("/{project_id}/tasks/{task_id}", status_code=204)
 async def delete_task(project_id: int, task_id: int, principal: Member, rt: RuntimeDep) -> None:
     await rt.tasks.delete_task(actor(principal), project_id, task_id)
+
+
+@router.post("/{project_id}/tasks/{task_id}/checklist", status_code=204)
+async def add_item(
+    project_id: int, task_id: int, body: ItemCreateIn, principal: Member, rt: RuntimeDep
+) -> None:
+    await rt.tasks.add_item(actor(principal), project_id, task_id, body.title)
+
+
+@router.patch("/{project_id}/checklist/{item_id}", status_code=204)
+async def update_item(
+    project_id: int, item_id: int, body: ItemUpdateIn, principal: Member, rt: RuntimeDep
+) -> None:
+    await rt.tasks.update_item(
+        actor(principal), project_id, item_id, body.model_dump(exclude_unset=True)
+    )
+
+
+@router.delete("/{project_id}/checklist/{item_id}", status_code=204)
+async def delete_item(project_id: int, item_id: int, principal: Member, rt: RuntimeDep) -> None:
+    await rt.tasks.delete_item(actor(principal), project_id, item_id)

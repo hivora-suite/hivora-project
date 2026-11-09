@@ -13,8 +13,9 @@ from hivora_project.member.access import (
     LastManagerError,
     UserNotFoundError,
     is_only_manager_somewhere,
+    list_memberships,
 )
-from hivora_project.member.models import Role, User
+from hivora_project.member.models import ProjectMember, Role, User
 from hivora_project.member.passwords import check_password_policy, validate_username
 from hivora_project.member.sessions import revoke_sessions
 from hivora_project.member.totp import clear_totp
@@ -39,6 +40,11 @@ class UserAdmin:
     async def list_users(self) -> list[User]:
         async with self.sessions() as session:
             return list(await session.scalars(select(User).order_by(User.username)))
+
+    async def memberships(self, user_id: int) -> list[ProjectMember]:
+        async with self.sessions() as session:
+            await get_user(session, user_id)
+            return await list_memberships(session, user_id)
 
     async def create_user(self, username: str, role: Role, password: str) -> User:
         username = validate_username(username)

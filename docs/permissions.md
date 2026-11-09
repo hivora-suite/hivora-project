@@ -16,6 +16,7 @@
 |---|---|---|
 | Créer, désactiver un compte, changer son rôle | Oui | Non |
 | Réinitialiser le TOTP d'un compte | Oui | Non |
+| Choisir les projets accessibles à un compte | Oui | Non |
 | Créer un projet (le créateur devient `manager`) | Oui | Oui |
 | Gérer son propre compte (mot de passe, TOTP, sessions) | Oui | Oui |
 

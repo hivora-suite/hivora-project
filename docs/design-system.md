@@ -4,7 +4,7 @@ Même structure visuelle que Hivora Panel, avec son propre accent violet. Source
 
 ## Identité
 
-- Thèmes clair et sombre. Clair : blanc. Sombre : noir. Neutres sans aucune teinte.
+- Thèmes clair et sombre. Clair : blanc cassé. Sombre : noir, surfaces en gris foncé, texte blanc adouci. Neutres sans aucune teinte.
 - Accent violet vif (`--primary`), qui distingue Hivora Project de Hivora Panel.
 - Mascotte : le chat. Tout logo, icône ou état vide l'utilise : chat noir, fond violet `#7c38ee`, yeux blancs. Jamais d'hexagone ni de lettre comme logo.
 
@@ -31,8 +31,9 @@ Même structure visuelle que Hivora Panel, avec son propre accent violet. Source
 
 - Jamais de couleur en dur : uniquement des tokens. Le thème sombre ne redéfinit que des tokens.
 - Contraste du texte d'au moins 4,5:1 (WCAG AA).
-- Ombres neutres et léger reflet sur les surfaces en relief.
-- Une seule famille d'animations : `--ease-out`, et `--ease-spring` pour les apparitions.
+- Menus neutres, sans violet : un projet déplié forme un bloc surélevé. Ombres neutres et léger reflet sur les surfaces en relief.
+- La grille de fond couvre l'écran, en fondu sous les en-têtes.
+- Une seule courbe pour les ouvertures, `--ease-out`, courtes (160 à 320 ms). Ce qui se déplie passe par `Collapse`.
 - Icônes : `lucide-react`.
 - Tout élément cliquable affiche le curseur main et un focus visible.
 

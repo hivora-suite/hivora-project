@@ -6,8 +6,10 @@ import {
   api,
   setCsrfToken,
   type Board,
+  type BoardTask,
   type Candidate,
   type Me,
+  type Membership,
   type Project,
   type ProjectMember,
   type ProjectRole,
@@ -100,6 +102,13 @@ export const useMembers = (id: number) =>
 export const useCandidates = (id: number) =>
   useQuery({ queryKey: [...keys.projects, id, "candidates"], queryFn: () => api<Candidate[]>(`/projects/${id}/candidates`) });
 
+export const useUserMemberships = (userId: number) =>
+  useQuery({
+    queryKey: [...keys.projects, "of-user", userId],
+    queryFn: () => api<Membership[]>(`/users/${userId}/projects`),
+    enabled: userId > 0,
+  });
+
 export function useCreateProject() {
   const qc = useQueryClient();
   return useMutation({
@@ -137,8 +146,41 @@ export const boardApi = {
     api<void>(`/projects/${id}/columns/${columnId}`, { method: "DELETE" }),
   createTask: ({ id, ...b }: { id: number; title: string; column_id: number }) =>
     api<unknown>(`/projects/${id}/tasks`, { method: "POST", body: b }),
-  updateTask: ({ id, taskId, ...b }: { id: number; taskId: number; title: string; description: string; assignee_id: number | null }) =>
+  updateTask: ({ id, taskId, ...b }: { id: number; taskId: number; title?: string; description?: string; start_date?: string | null; due_date?: string | null; labels?: BoardTask["labels"]; assignee_ids?: number[] }) =>
     api<unknown>(`/projects/${id}/tasks/${taskId}`, { method: "PATCH", body: b }),
+  moveTask: ({ id, taskId, ...b }: { id: number; taskId: number; column_id: number; position: number }) =>
+    api<unknown>(`/projects/${id}/tasks/${taskId}/move`, { method: "POST", body: b }),
+  addItem: ({ id, taskId, title }: { id: number; taskId: number; title: string }) =>
+    api<void>(`/projects/${id}/tasks/${taskId}/checklist`, { method: "POST", body: { title } }),
+  updateItem: ({ id, itemId, ...b }: { id: number; itemId: number; done: boolean }) =>
+    api<void>(`/projects/${id}/checklist/${itemId}`, { method: "PATCH", body: b }),
+  deleteItem: ({ id, itemId }: { id: number; itemId: number }) =>
+    api<void>(`/projects/${id}/checklist/${itemId}`, { method: "DELETE" }),
   deleteTask: ({ id, taskId }: { id: number; taskId: number }) =>
     api<void>(`/projects/${id}/tasks/${taskId}`, { method: "DELETE" }),
 };
+
+type Move = { taskId: number; column_id: number; position: number };
+
+function moved(tasks: BoardTask[], { taskId, column_id, position }: Move): BoardTask[] {
+  const task = tasks.find((x) => x.id === taskId);
+  if (!task) return tasks;
+  const rest = tasks.filter((x) => x !== task);
+  const siblings = rest.filter((x) => x.column_id === column_id);
+  const at = position < siblings.length ? rest.indexOf(siblings[position]) : rest.length;
+  return [...rest.slice(0, at), { ...task, column_id }, ...rest.slice(at)];
+}
+
+/** Moves a card at once on screen; the server's answer then confirms or corrects it. */
+export function useMoveTask(id: number) {
+  const qc = useQueryClient();
+  const key = [...keys.projects, id, "board"];
+  return useMutation({
+    mutationFn: (v: Move) => boardApi.moveTask({ id, ...v }),
+    onMutate: async (v) => {
+      await qc.cancelQueries({ queryKey: key });
+      qc.setQueryData<Board>(key, (board) => board && { ...board, tasks: moved(board.tasks, v) });
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: key }),
+  });
+}

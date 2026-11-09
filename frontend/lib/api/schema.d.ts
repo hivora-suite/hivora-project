@@ -247,6 +247,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{project_id}/checklist/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Item */
+        delete: operations["delete_item_api_v1_projects__project_id__checklist__item_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Item */
+        patch: operations["update_item_api_v1_projects__project_id__checklist__item_id__patch"];
+        trace?: never;
+    };
     "/api/v1/projects/{project_id}/columns": {
         parameters: {
             query?: never;
@@ -350,6 +368,23 @@ export interface paths {
         head?: never;
         /** Update Task */
         patch: operations["update_task_api_v1_projects__project_id__tasks__task_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/tasks/{task_id}/checklist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Item */
+        post: operations["add_item_api_v1_projects__project_id__tasks__task_id__checklist_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/projects/{project_id}/tasks/{task_id}/move": {
@@ -459,6 +494,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/{user_id}/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** User Projects */
+        get: operations["user_projects_api_v1_users__user_id__projects_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/{user_id}/sessions": {
         parameters: {
             query?: never;
@@ -512,6 +564,15 @@ export interface components {
             /** Username */
             username: string;
         };
+        /** ChecklistItemOut */
+        ChecklistItemOut: {
+            /** Done */
+            done: boolean;
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+        };
         /** CodeIn */
         CodeIn: {
             /** Code */
@@ -552,6 +613,18 @@ export interface components {
             /** Version */
             version: string;
         };
+        /** ItemCreateIn */
+        ItemCreateIn: {
+            /** Title */
+            title: string;
+        };
+        /** ItemUpdateIn */
+        ItemUpdateIn: {
+            /** Done */
+            done?: boolean;
+            /** Title */
+            title?: string;
+        };
         /** LoginIn */
         LoginIn: {
             /** Password */
@@ -586,6 +659,12 @@ export interface components {
         /** MemberRoleIn */
         MemberRoleIn: {
             /** @description The account is added when not a member yet */
+            role: components["schemas"]["ProjectRole"];
+        };
+        /** MembershipOut */
+        MembershipOut: {
+            /** Project Id */
+            project_id: number;
             role: components["schemas"]["ProjectRole"];
         };
         /** PasswordConfirmIn */
@@ -681,8 +760,6 @@ export interface components {
         };
         /** TaskCreateIn */
         TaskCreateIn: {
-            /** Assignee Id */
-            assignee_id?: number | null;
             /** Column Id */
             column_id?: number | null;
             /**
@@ -702,25 +779,42 @@ export interface components {
         };
         /** TaskOut */
         TaskOut: {
-            /** Assignee Id */
-            assignee_id: number | null;
+            /** Assignee Ids */
+            assignee_ids: number[];
+            /** Checklist */
+            checklist: components["schemas"]["ChecklistItemOut"][];
             /** Column Id */
             column_id: number;
             /** Description */
             description: string;
+            /** Due Date */
+            due_date: string | null;
             /** Id */
             id: number;
+            /** Labels */
+            labels: ("green" | "blue" | "amber" | "red" | "violet" | "gray")[];
             /** Position */
             position: number;
+            /** Start Date */
+            start_date: string | null;
             /** Title */
             title: string;
         };
-        /** TaskUpdateIn */
+        /**
+         * TaskUpdateIn
+         * @description Only the fields sent change; the dates may be null to clear them.
+         */
         TaskUpdateIn: {
-            /** Assignee Id */
-            assignee_id?: number | null;
+            /** Assignee Ids */
+            assignee_ids?: number[];
             /** Description */
             description?: string;
+            /** Due Date */
+            due_date?: string | null;
+            /** Labels */
+            labels?: ("green" | "blue" | "amber" | "red" | "violet" | "gray")[];
+            /** Start Date */
+            start_date?: string | null;
             /** Title */
             title?: string;
         };
@@ -1254,6 +1348,70 @@ export interface operations {
             };
         };
     };
+    delete_item_api_v1_projects__project_id__checklist__item_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: number;
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_item_api_v1_projects__project_id__checklist__item_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: number;
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemUpdateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     create_column_api_v1_projects__project_id__columns_post: {
         parameters: {
             query?: never;
@@ -1551,6 +1709,40 @@ export interface operations {
             };
         };
     };
+    add_item_api_v1_projects__project_id__tasks__task_id__checklist_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: number;
+                task_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemCreateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     move_task_api_v1_projects__project_id__tasks__task_id__move_post: {
         parameters: {
             query?: never;
@@ -1776,6 +1968,37 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    user_projects_api_v1_users__user_id__projects_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MembershipOut"][];
+                };
             };
             /** @description Validation Error */
             422: {
