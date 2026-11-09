@@ -42,6 +42,8 @@ SQLite WAL en V1, compatibilité PostgreSQL obligatoire.
 
 Valeurs d'exemple : `example.com`, `192.0.2.0/24`.
 
+Une clé par projet : Hivora Project et Hivora Panel ne partagent jamais une clé ni un secret.
+
 ## Compromission
 
 Tout élément de niveau 1 exposé dans un chat IA, un commit, une issue, une capture d'écran, un document partagé ou des logs accessibles est compromis.
