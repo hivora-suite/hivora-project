@@ -115,6 +115,21 @@ export const fr = {
   "projects.roleOf": "Rôle de {name}",
   "projects.showArchived": "Afficher les projets archivés",
   "projects.unarchive": "Réactiver",
+  "board.addColumn": "Ajouter une colonne",
+  "board.addTask": "Ajouter une tâche",
+  "board.addTaskIn": "Ajouter une tâche dans {name}",
+  "board.assignee": "Assignée à",
+  "board.columnActions": "Actions de la colonne {name}",
+  "board.columnName": "Nom de la colonne",
+  "board.deleteConfirm": "Supprimer la tâche {name} ?",
+  "board.renameColumn": "Renommer",
+  "board.taskTitle": "Titre",
+  "board.unassigned": "Non assignée",
+  "error.assignee_not_member": "La personne assignée doit être membre du projet.",
+  "error.column_not_empty": "Déplacez ou supprimez d'abord les tâches de cette colonne.",
+  "error.column_not_found": "Colonne introuvable.",
+  "error.last_column": "Un tableau doit garder au moins une colonne.",
+  "error.task_not_found": "Tâche introuvable.",
 };
 
 export type MessageKey = keyof typeof fr;

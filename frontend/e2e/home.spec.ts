@@ -36,6 +36,14 @@ test("the admin signs in, replaces the initial password, creates an account, sig
   await page.getByRole("button", { name: "Ajouter", exact: true }).click();
   await expect(page.getByRole("cell", { name: "camille", exact: true })).toBeVisible();
 
+  await page.getByLabel("Ajouter une tâche dans À faire").fill("Rédiger le brief");
+  await page.getByLabel("Ajouter une tâche dans À faire").press("Enter");
+  await page.getByRole("button", { name: "Rédiger le brief" }).click();
+  await page.locator("#task-assignee").selectOption({ label: "camille" });
+  await page.getByRole("dialog").getByRole("button", { name: "Enregistrer" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Rédiger le brief camille" })).toBeVisible();
+
   await page.getByRole("button", { name: "Archiver" }).click();
   await expect(page.getByRole("button", { name: "Réactiver" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Retirer camille du projet" })).toHaveCount(0);

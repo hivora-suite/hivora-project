@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, Label, Select } from "@/components/ui/input";
 import { TBody, THead, Table, Td, Th, Tr } from "@/components/ui/table";
+import { Board } from "@/features/board/board";
 import type { Project, ProjectRole } from "@/lib/api/client";
 import { projectApi, useCandidates, useMembers, useProject, useProjectMutation } from "@/lib/api/hooks";
 import { useI18n } from "@/lib/i18n";
@@ -202,6 +203,7 @@ function ProjectView() {
         }
       />
       {actionError && <Alert tone="danger" className="mb-4">{errorMessage(actionError)}</Alert>}
+      <Board project={project} />
       <div className="stagger grid items-start gap-4 xl:grid-cols-2">
         {manager && !project.archived ? (
           <DetailsCard key={`${project.name}|${project.description}`} project={project} />

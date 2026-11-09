@@ -6,7 +6,8 @@ from alembic import context
 from alembic.autogenerate.api import AutogenContext
 
 import hivora_project.member.models
-import hivora_project.project.models  # noqa: F401  (registers the tables on the metadata)
+import hivora_project.project.models
+import hivora_project.task.models  # noqa: F401  (registers the tables on the metadata)
 from hivora_project.core.config import Settings
 from hivora_project.core.db.base import Base, UTCDateTime
 from hivora_project.core.db.engine import make_sync_engine

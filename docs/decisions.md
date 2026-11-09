@@ -33,3 +33,4 @@ Une ligne par décision. Toutes datées du 09/11/2026.
 | D27 | Aucun paquet GHCR : uniquement des releases sur le dépôt, image construite à l'installation | Choix de l'utilisateur, rien à publier hors du dépôt |
 | D28 | Cookie `Secure` en mode `public` seulement ; en `lan`, accès direct en HTTP | L'application ne gère pas TLS (D25), un cookie `Secure` bloquerait la connexion en HTTP |
 | D29 | Compte identifié par un nom d'utilisateur, sans e-mail ; codes de secours stockés sur le compte | Reprise du modèle du panel, pas d'envoi d'e-mail en V1 |
+| D30 | Effets d'un contexte sur un autre par rappels fournis à l'assemblage, pas de bus d'événements en V1 | Pas de dépendance inverse, sans mécanisme de plus |

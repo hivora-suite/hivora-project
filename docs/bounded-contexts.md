@@ -20,6 +20,7 @@ Le noyau `core` (configuration, erreurs, base, horloge, bus d'événements) rest
 - Seul le contexte propriétaire écrit dans ses tables.
 - Exception en lecture : jointure sur les colonnes d'identité (`user.username`, `project.name`).
 - Une clé étrangère entre contextes est permise : elle ne donne aucun droit d'écriture.
+- Quand un contexte amont doit déclencher un effet en aval (colonnes d'un nouveau projet, tâches d'un membre retiré), l'assemblage dans `runtime.py` lui fournit le rappel : il ne dépend pas de l'aval.
 - Seuls les contextes de la version en cours sont créés.
 - Un nouveau contexte exige une ligne dans `decisions.md`.
 

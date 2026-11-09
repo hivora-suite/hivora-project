@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   api,
   setCsrfToken,
+  type Board,
   type Candidate,
   type Me,
   type Project,
@@ -102,7 +103,7 @@ export const useCandidates = (id: number) =>
 export function useCreateProject() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (name: string) => api<Project>("/projects", { method: "POST", body: { name } }),
+    mutationFn: (body: { name: string; language: string }) => api<Project>("/projects", { method: "POST", body }),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.projects }),
   });
 }
@@ -122,4 +123,22 @@ export const projectApi = {
     api<void>(`/projects/${id}/members/${userId}`, { method: "PUT", body: { role } }),
   removeMember: ({ id, userId }: { id: number; userId: number }) =>
     api<void>(`/projects/${id}/members/${userId}`, { method: "DELETE" }),
+};
+
+export const useBoard = (id: number) =>
+  useQuery({ queryKey: [...keys.projects, id, "board"], queryFn: () => api<Board>(`/projects/${id}/board`) });
+
+export const boardApi = {
+  createColumn: ({ id, name }: { id: number; name: string }) =>
+    api<unknown>(`/projects/${id}/columns`, { method: "POST", body: { name } }),
+  updateColumn: ({ id, columnId, ...b }: { id: number; columnId: number; name?: string; position?: number }) =>
+    api<unknown>(`/projects/${id}/columns/${columnId}`, { method: "PATCH", body: b }),
+  deleteColumn: ({ id, columnId }: { id: number; columnId: number }) =>
+    api<void>(`/projects/${id}/columns/${columnId}`, { method: "DELETE" }),
+  createTask: ({ id, ...b }: { id: number; title: string; column_id: number }) =>
+    api<unknown>(`/projects/${id}/tasks`, { method: "POST", body: b }),
+  updateTask: ({ id, taskId, ...b }: { id: number; taskId: number; title: string; description: string; assignee_id: number | null }) =>
+    api<unknown>(`/projects/${id}/tasks/${taskId}`, { method: "PATCH", body: b }),
+  deleteTask: ({ id, taskId }: { id: number; taskId: number }) =>
+    api<void>(`/projects/${id}/tasks/${taskId}`, { method: "DELETE" }),
 };

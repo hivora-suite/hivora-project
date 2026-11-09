@@ -16,12 +16,12 @@ import { useCreateProject, useProjects } from "@/lib/api/hooks";
 import { useI18n } from "@/lib/i18n";
 
 function CreateProjectDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
-  const { t, errorMessage } = useI18n();
+  const { t, lang, errorMessage } = useI18n();
   const router = useRouter();
   const create = useCreateProject();
   const submit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    create.mutate(String(new FormData(e.currentTarget).get("name")), {
+    create.mutate({ name: String(new FormData(e.currentTarget).get("name")), language: lang }, {
       onSuccess: (project) => router.push(`/project/?id=${project.id}`),
     });
   };

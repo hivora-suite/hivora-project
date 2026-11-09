@@ -10,6 +10,9 @@ export type Project = Schemas["ProjectOut"];
 export type ProjectRole = Project["role"];
 export type ProjectMember = Schemas["MemberOut"];
 export type Candidate = Schemas["CandidateOut"];
+export type Board = Schemas["BoardOut"];
+export type BoardColumn = Schemas["ColumnOut"];
+export type BoardTask = Schemas["TaskOut"];
 
 /** Error returned by the backend: `code` is stable and translated by the UI. */
 export class ApiError extends Error {

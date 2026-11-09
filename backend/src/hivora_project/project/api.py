@@ -1,7 +1,7 @@
 """Project routes (/api/v1/projects). Each action's role is checked by the service."""
 
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter
 from pydantic import BaseModel, Field, StringConstraints
@@ -29,6 +29,7 @@ class ProjectOut(BaseModel):
 class ProjectCreateIn(BaseModel):
     name: Name
     description: Description = ""
+    language: Literal["fr", "en"] = "fr"  # of the default columns
 
 
 class ProjectUpdateIn(BaseModel):
@@ -78,7 +79,9 @@ async def list_projects(
 
 @router.post("", status_code=201)
 async def create_project(body: ProjectCreateIn, principal: Member, rt: RuntimeDep) -> ProjectOut:
-    return project_out(await rt.projects.create(actor(principal), body.name, body.description))
+    return project_out(
+        await rt.projects.create(actor(principal), body.name, body.description, body.language)
+    )
 
 
 @router.get("/{project_id}")

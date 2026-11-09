@@ -1,5 +1,6 @@
 """Projects, and the membership actions a project allows; membership lives in `member.access`."""
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
@@ -23,27 +24,37 @@ class ProjectView:
     role: ProjectRole
 
 
+async def open_project(
+    session: AsyncSession,
+    actor: Actor,
+    project_id: int,
+    needed: ProjectRole,
+    *,
+    writable: bool = True,
+) -> ProjectView:
+    """The project, once the actor's role is checked: the other contexts go through here."""
+    role = await access.project_role(session, actor, project_id, needed)
+    project = await session.get(Project, project_id)
+    if project is None:
+        raise ProjectNotFoundError(str(project_id))
+    if writable and project.archived_at is not None:
+        raise ProjectArchivedError("this project is archived")
+    return ProjectView(project, role)
+
+
 class ProjectService:
-    def __init__(self, *, sessions: async_sessionmaker[AsyncSession], clock: Clock) -> None:
+    def __init__(
+        self,
+        *,
+        sessions: async_sessionmaker[AsyncSession],
+        clock: Clock,
+        on_created: Callable[[AsyncSession, int, str], Awaitable[None]],
+        on_member_removed: Callable[[AsyncSession, int, int], Awaitable[None]],
+    ) -> None:
         self.sessions = sessions
         self.clock = clock
-
-    async def _open(
-        self,
-        session: AsyncSession,
-        actor: Actor,
-        project_id: int,
-        needed: ProjectRole,
-        *,
-        writable: bool = True,
-    ) -> ProjectView:
-        role = await access.project_role(session, actor, project_id, needed)
-        project = await session.get(Project, project_id)
-        if project is None:
-            raise ProjectNotFoundError(str(project_id))
-        if writable and project.archived_at is not None:
-            raise ProjectArchivedError("this project is archived")
-        return ProjectView(project, role)
+        self.on_created = on_created  # set by `runtime`: this context knows nothing of the others
+        self.on_member_removed = on_member_removed
 
     async def list_projects(self, actor: Actor, *, archived: bool) -> list[ProjectView]:
         async with self.sessions() as session:
@@ -61,7 +72,7 @@ class ProjectService:
                 for project, role in rows
             ]
 
-    async def create(self, actor: Actor, name: str, description: str) -> ProjectView:
+    async def create(self, actor: Actor, name: str, description: str, language: str) -> ProjectView:
         async with self.sessions() as session, session.begin():
             project = Project(
                 name=name,
@@ -72,17 +83,20 @@ class ProjectService:
             session.add(project)
             await session.flush()
             await access.add_creator(session, project.id, actor.user_id)
+            await self.on_created(session, project.id, language)
         return ProjectView(project, ProjectRole.MANAGER)
 
     async def get(self, actor: Actor, project_id: int) -> ProjectView:
         async with self.sessions() as session:
-            return await self._open(session, actor, project_id, ProjectRole.VIEWER, writable=False)
+            return await open_project(
+                session, actor, project_id, ProjectRole.VIEWER, writable=False
+            )
 
     async def update(
         self, actor: Actor, project_id: int, *, name: str | None, description: str | None
     ) -> ProjectView:
         async with self.sessions() as session, session.begin():
-            view = await self._open(session, actor, project_id, ProjectRole.MANAGER)
+            view = await open_project(session, actor, project_id, ProjectRole.MANAGER)
             if name is not None:
                 view.project.name = name
             if description is not None:
@@ -91,28 +105,31 @@ class ProjectService:
 
     async def set_archived(self, actor: Actor, project_id: int, *, archived: bool) -> ProjectView:
         async with self.sessions() as session, session.begin():
-            view = await self._open(session, actor, project_id, ProjectRole.MANAGER, writable=False)
+            view = await open_project(
+                session, actor, project_id, ProjectRole.MANAGER, writable=False
+            )
             view.project.archived_at = self.clock.now() if archived else None
             return view
 
     async def members(self, actor: Actor, project_id: int) -> list[MemberInfo]:
         async with self.sessions() as session:
-            await self._open(session, actor, project_id, ProjectRole.VIEWER, writable=False)
+            await open_project(session, actor, project_id, ProjectRole.VIEWER, writable=False)
             return await access.list_members(session, project_id)
 
     async def candidates(self, actor: Actor, project_id: int) -> list[User]:
         async with self.sessions() as session:
-            await self._open(session, actor, project_id, ProjectRole.MANAGER)
+            await open_project(session, actor, project_id, ProjectRole.MANAGER)
             return await access.list_candidates(session, project_id)
 
     async def set_member(
         self, actor: Actor, project_id: int, user_id: int, role: ProjectRole
     ) -> None:
         async with self.sessions() as session, session.begin():
-            await self._open(session, actor, project_id, ProjectRole.MANAGER)
+            await open_project(session, actor, project_id, ProjectRole.MANAGER)
             await access.set_member(session, project_id, user_id, role)
 
     async def remove_member(self, actor: Actor, project_id: int, user_id: int) -> None:
         async with self.sessions() as session, session.begin():
-            await self._open(session, actor, project_id, ProjectRole.MANAGER)
+            await open_project(session, actor, project_id, ProjectRole.MANAGER)
             await access.remove_member(session, project_id, user_id)
+            await self.on_member_removed(session, project_id, user_id)

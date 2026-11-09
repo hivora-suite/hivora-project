@@ -86,6 +86,10 @@ async def list_candidates(session: AsyncSession, project_id: int) -> list[User]:
     return list(rows)
 
 
+async def is_member(session: AsyncSession, project_id: int, user_id: int) -> bool:
+    return await session.get(ProjectMember, (project_id, user_id)) is not None
+
+
 async def _other_managers(session: AsyncSession, project_id: int, user_id: int) -> int:
     count = await session.scalar(
         select(func.count()).where(

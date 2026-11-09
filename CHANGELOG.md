@@ -2,6 +2,7 @@
 
 ## [Non publié]
 
+- Tâches et colonnes : création, assignation, colonnes par défaut.
 - Projets : création, membres et rôles par projet, archivage.
 - Comptes et connexion : mots de passe, sessions, double authentification, codes de secours, rôles.
 

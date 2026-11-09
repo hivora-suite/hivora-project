@@ -39,14 +39,14 @@ Une tâche V1 n'a ni date, ni estimation, ni dépendance.
 
 - Un projet actif a toujours au moins un `manager`.
 - Un projet archivé est en lecture seule.
-- Un nouveau projet reçoit des colonnes par défaut.
+- Un nouveau projet reçoit des colonnes par défaut, dans la langue de son créateur.
 
 **Tâches**
 
 - La colonne d'une tâche appartient au projet de la tâche.
 - L'assigné d'une tâche est membre de son projet.
 - Retirer un membre d'un projet libère ses tâches assignées.
-- Une colonne non vide ne peut pas être supprimée.
+- Une colonne non vide ne peut pas être supprimée, ni la dernière d'un tableau.
 - L'ordre des colonnes et des tâches est déterminé par `position`.
 
 **Commentaires**

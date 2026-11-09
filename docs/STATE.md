@@ -1,14 +1,14 @@
 # État du projet
 
-**Lot 4 terminé.**
+**Lot 5 terminé.**
 
 ## Fait
 
-Contextes Member et Project : comptes, rôles, projets, appartenance, archivage. Chaque lot passe par la CI, dont PostgreSQL.
+Contextes Member, Project et Task : comptes, rôles, projets, colonnes, tâches, assignation.
 
 ## Prochaine étape
 
-Lot 5 : Tasks (`roadmap.md`), avec colonnes par défaut à la création d'un projet et libération des tâches d'un membre retiré.
+Lot 6 : Kanban (`roadmap.md`), déplacement des tâches et ordre des colonnes, souris et clavier.
 
 ## Actions ouvertes (utilisateur)
 

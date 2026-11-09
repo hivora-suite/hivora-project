@@ -12,6 +12,7 @@ from hivora_project.core.db.engine import make_engine, make_sessionmaker
 from hivora_project.core.db.migrate import prepare_schema
 from hivora_project.member.service import AuthService
 from hivora_project.project.service import ProjectService
+from hivora_project.task.service import TaskService, create_default_columns, release_assignee
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,6 +21,7 @@ class Runtime:
     engine: AsyncEngine
     auth: AuthService
     projects: ProjectService
+    tasks: TaskService
 
     @classmethod
     def build(cls, settings: Settings) -> "Runtime":
@@ -27,7 +29,14 @@ class Runtime:
         box = SecretBox(load_or_create_master_key(settings.secret_key_path))
         sessions = make_sessionmaker(engine)
         auth = AuthService(settings=settings, sessions=sessions, box=box)
-        return cls(settings, engine, auth, ProjectService(sessions=sessions, clock=auth.clock))
+        projects = ProjectService(
+            sessions=sessions,
+            clock=auth.clock,
+            on_created=create_default_columns,
+            on_member_removed=release_assignee,
+        )
+        tasks = TaskService(sessions=sessions, clock=auth.clock)
+        return cls(settings, engine, auth, projects, tasks)
 
     async def start(self) -> None:
         await asyncio.to_thread(prepare_schema, self.settings)
