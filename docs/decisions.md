@@ -22,7 +22,7 @@ Une ligne par décision. Toutes datées du 09/11/2026.
 | D16 | Tout secret exposé est compromis et doit être remplacé (`conventions.md`) | Une suppression n'annule pas une exposition |
 | D17 | TOTP en V1 : activation par utilisateur, codes de secours, réinitialisation par un administrateur, obligatoire pour les instances exposées publiquement | Exposition Internet à prévoir |
 | D18 | Dépôt public depuis le 09/11/2026 ; revue de sécurité obligatoire avant toute release stable ; aucun secret ni information d'infrastructure dans le dépôt | Code AGPL ouvert, sans publier de version stable non revue |
-| D19 | Documentation sécurité dans un dépôt privé séparé : hors du répertoire du projet, non indexée par graphify, non chargée automatiquement, jamais de secret dedans | Isolation structurelle |
+| D19 | Pas de dépôt ni de documentation dédiés à la sécurité : elle est portée par le code, ses tests, la revue avant release et `SECURITY.md` (révisée le 10/11/2026) | Simplicité, demande de l'utilisateur |
 | D20 | Licence AGPL-3.0 | Cohérence avec le panel |
 | D21 | Vue liste et temps réel en V1.1 | V1 limitée |
 | D22 | Rôles : `admin` et `member` pour l'instance ; `manager`, `contributor`, `viewer` par projet (`permissions.md`) | Modèle simple |

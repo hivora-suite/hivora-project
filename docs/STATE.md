@@ -12,5 +12,4 @@ Lot 8 : Release V1 (`roadmap.md`), dont la revue de sécurité.
 
 ## Actions ouvertes (utilisateur)
 
-- Créer le dépôt distant privé `hivora-project-security`, puis y pousser le dépôt local voisin (D19).
 - Activer le signalement privé de GitHub, puis compléter le contact de `SECURITY.md`.
