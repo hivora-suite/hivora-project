@@ -72,9 +72,8 @@ class CommentService:
                     created_at=self.clock.now(),
                 )
             )
-            await history.record(
-                session, task_id, actor.user_id, "comment_added", self.clock.now(), new=body
-            )
+            # No comment text in the history: a deleted comment must leave nothing behind.
+            await history.record(session, task_id, actor.user_id, "comment_added", self.clock.now())
 
     async def edit(self, actor: Actor, project_id: int, comment_id: int, body: str) -> None:
         async with self.sessions() as session, session.begin():
@@ -82,16 +81,9 @@ class CommentService:
             comment = await _comment(session, project_id, comment_id)
             if comment.author_id != actor.user_id:
                 raise NotCommentAuthorError("only its author can edit a comment")
-            previous, comment.body = comment.body, body
-            comment.edited_at = self.clock.now()
+            comment.body, comment.edited_at = body, self.clock.now()
             await history.record(
-                session,
-                comment.task_id,
-                actor.user_id,
-                "comment_edited",
-                comment.edited_at,
-                old=previous,
-                new=body,
+                session, comment.task_id, actor.user_id, "comment_edited", comment.edited_at
             )
 
     async def delete(self, actor: Actor, project_id: int, comment_id: int) -> None:
@@ -101,11 +93,6 @@ class CommentService:
             if comment.author_id != actor.user_id and view.role is not ProjectRole.MANAGER:
                 raise NotCommentAuthorError("only its author or a manager can delete a comment")
             await history.record(
-                session,
-                comment.task_id,
-                actor.user_id,
-                "comment_deleted",
-                self.clock.now(),
-                old=comment.body,
+                session, comment.task_id, actor.user_id, "comment_deleted", self.clock.now()
             )
             await session.delete(comment)

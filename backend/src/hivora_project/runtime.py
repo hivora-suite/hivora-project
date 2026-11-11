@@ -1,6 +1,7 @@
 """Assembles the application's services."""
 
 import asyncio
+import os
 import sys
 from dataclasses import dataclass
 
@@ -42,6 +43,12 @@ class Runtime:
         return cls(settings, engine, auth, projects, tasks, comments)
 
     async def start(self) -> None:
+        if self.settings.access == "public" and os.environ.get(
+            "FORWARDED_ALLOW_IPS", "127.0.0.1"
+        ) in ("", "127.0.0.1"):
+            # Every client would share the proxy's address: one attacker locks all logins.
+            print("Warning: public access without HIVORA_PROJECT_TRUSTED_PROXY; "
+                  "set it to the reverse proxy's address", file=sys.stderr, flush=True)  # fmt: skip
         await asyncio.to_thread(prepare_schema, self.settings)
         password = await self.auth.ensure_initial_admin()
         if password:

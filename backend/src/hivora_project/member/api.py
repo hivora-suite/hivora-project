@@ -127,7 +127,7 @@ async def totp_confirm(body: CodeIn, principal: TotpSetup, rt: RuntimeDep) -> Re
 
 @router.post("/totp/disable", status_code=204)
 async def totp_disable(body: PasswordConfirmIn, principal: Member, rt: RuntimeDep) -> None:
-    await rt.auth.totp_disable(principal.user_id, body.password)
+    await rt.auth.totp_disable(principal.user_id, body.password, keep_session=principal.session_id)
 
 
 @router.get("/sessions")

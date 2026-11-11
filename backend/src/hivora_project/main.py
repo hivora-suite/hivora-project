@@ -1,10 +1,10 @@
 """ASGI entrypoint: builds the FastAPI application."""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from importlib.metadata import version
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -19,6 +19,13 @@ from hivora_project.web import errors
 
 API_PREFIX = "/api/v1"
 VERSION = version("hivora-project")
+# Never framed (clickjacking, even from a sibling subdomain), no MIME sniffing, no referrer out.
+SECURITY_HEADERS = {
+    "Content-Security-Policy": "frame-ancestors 'none'",
+    "X-Frame-Options": "DENY",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "same-origin",
+}
 
 
 class Health(BaseModel):
@@ -49,6 +56,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         openapi_url=f"{API_PREFIX}/openapi.json",
     )
     errors.install(app)
+
+    @app.middleware("http")
+    async def security_headers(
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        response = await call_next(request)
+        response.headers.update(SECURITY_HEADERS)
+        return response
+
     app.include_router(auth_router, prefix=f"{API_PREFIX}/auth")
     app.include_router(users_router, prefix=f"{API_PREFIX}/users")
     app.include_router(projects_router, prefix=f"{API_PREFIX}/projects")

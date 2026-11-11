@@ -4,6 +4,8 @@ Rules and pieces it relies on: `passwords` (policy, Argon2id), `sessions` (cooki
 CSRF, revocation), `totp` (codes accepted once, recovery codes), `ratelimit` (attempts).
 """
 
+import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -68,6 +70,9 @@ class AuthService:
         self.clock = clock or SystemClock()
         self.totp = TotpGuard(box, self.clock)
         self.limiter = LoginRateLimiter(self.clock)
+        # Check and record of an attempt in one step, or parallel requests pass the check
+        # before any failure counts. Costs nothing: Argon2 already blocks the event loop.
+        self._attempts = asyncio.Lock()
         self.users = UserAdmin(sessions=sessions, clock=self.clock)
 
     # --- bootstrap ------------------------------------------------------------
@@ -103,8 +108,8 @@ class AuthService:
     ) -> LoginResult:
         username = username.strip().lower()
         keys = (f"ip:{ip}", f"user:{username}")
-        self.limiter.check(*keys)
-        async with self.sessions() as session, session.begin():
+        async with self._attempts, self.sessions() as session, session.begin():
+            self.limiter.check(*keys)
             user = await session.scalar(select(User).where(User.username == username))
             valid = verify_password(user.password_hash if user else dummy_hash(), password)
             if not user or not valid or user.disabled:
@@ -162,10 +167,11 @@ class AuthService:
     async def change_password(
         self, user_id: int, current: str, new: str, *, keep_session: int | None = None
     ) -> None:
-        async with self.sessions() as session, session.begin():
+        async with self._attempts, self.sessions() as session, session.begin():
             user = await get_user(session, user_id)
-            if not verify_password(user.password_hash, current):
-                raise InvalidCredentialsError("current password is wrong")
+            self._attempt(
+                f"user:{user.username}", lambda: verify_password(user.password_hash, current)
+            )
             check_password_policy(new, user.username)
             user.password_hash = hash_password(new)
             user.must_change_password = False
@@ -180,24 +186,34 @@ class AuthService:
 
     async def totp_confirm(self, user_id: int, code: str) -> list[str]:
         """Enable TOTP after a first valid code; returns the recovery codes (shown once)."""
-        async with self.sessions() as session, session.begin():
+        async with self._attempts, self.sessions() as session, session.begin():
             user = await get_user(session, user_id)
             if user.totp_enabled or user.totp_ciphertext is None:
                 raise ConflictError("no TOTP enrollment in progress")
-            if not self.totp.accept(user, code):
-                raise InvalidCredentialsError("invalid TOTP code")
+            self._attempt(f"enroll:{user.id}", lambda: self.totp.accept(user, code))
             codes = generate_recovery_codes()
             user.recovery_codes = [hash_recovery_code(c) for c in codes]
             user.totp_enabled = True
         return codes
 
-    async def totp_disable(self, user_id: int, password: str) -> None:
-        async with self.sessions() as session, session.begin():
+    async def totp_disable(self, user_id: int, password: str, *, keep_session: int) -> None:
+        async with self._attempts, self.sessions() as session, session.begin():
             user = await get_user(session, user_id)
-            if not verify_password(user.password_hash, password):
-                raise InvalidCredentialsError("password is wrong")
+            self._attempt(
+                f"user:{user.username}", lambda: verify_password(user.password_hash, password)
+            )
             if self.settings.access == "public":
                 raise TotpMandatoryError(
                     "this instance is public: two-factor authentication is required"
                 )
             clear_totp(user)
+            await revoke_sessions(session, user.id, keep=keep_session)
+
+    def _attempt(self, key: str, valid: Callable[[], bool]) -> None:
+        """A password or code checked from a session, rate limited like a login (under
+        ``_attempts``): a stolen session cannot guess its way further."""
+        self.limiter.check(key)
+        if not valid():
+            self.limiter.failure(key)
+            raise InvalidCredentialsError("invalid password or code")
+        self.limiter.success(key)

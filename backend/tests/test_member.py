@@ -1,9 +1,11 @@
 import asyncio
 import re
 import sqlite3
+import time
 from collections.abc import Iterator
 from pathlib import Path
 
+import httpx2
 import pyotp
 import pytest
 from fastapi.testclient import TestClient
@@ -14,6 +16,7 @@ from hivora_project.core.db.engine import make_engine, make_sessionmaker
 from hivora_project.core.db.migrate import SchemaTooNewError, prepare_schema
 from hivora_project.main import create_app
 from hivora_project.member.initial import reset_account
+from hivora_project.web.deps import SESSION_COOKIE
 from tests.conftest import ADMIN_PASSWORD, POSTGRES, make_settings
 
 NEW_PASSWORD = "a-much-better-password"
@@ -107,6 +110,69 @@ def test_repeated_failures_are_slowed_down(client: TestClient) -> None:
     body = {"username": "admin", "password": "wrong-password"}
     codes = [client.post("/api/v1/auth/login", json=body).status_code for _ in range(6)]
     assert codes == [401] * 5 + [429]
+
+
+def test_parallel_failures_are_counted(settings: Settings) -> None:
+    """Concurrent attempts cannot all pass the check before any failure is recorded."""
+
+    async def burst() -> list[int]:
+        app = create_app(settings)
+        async with app.router.lifespan_context(app):
+            transport = httpx2.ASGITransport(app=app)
+            async with httpx2.AsyncClient(transport=transport, base_url="http://t") as c:
+                body = {"username": "admin", "password": "wrong-password"}
+                rs = await asyncio.gather(
+                    *(c.post("/api/v1/auth/login", json=body) for _ in range(20))
+                )
+                return sorted(r.status_code for r in rs)
+
+    assert asyncio.run(burst()) == [401] * 5 + [429] * 15
+
+
+def test_a_session_cannot_guess_further(client: TestClient) -> None:
+    headers = ready_admin(client)
+    guess = {"current": "wrong-password", "new": OTHER}
+    codes = [
+        client.post("/api/v1/auth/password", json=guess, headers=headers).status_code
+        for _ in range(6)
+    ]
+    assert codes == [401] * 5 + [429]
+    disable = client.post(
+        "/api/v1/auth/totp/disable", json={"password": NEW_PASSWORD}, headers=headers
+    )
+    assert disable.status_code == 429  # same account, same limit
+    client.post("/api/v1/auth/totp/enroll", headers=headers)
+    codes = [
+        client.post(
+            "/api/v1/auth/totp/confirm", json={"code": "000000"}, headers=headers
+        ).status_code
+        for _ in range(6)
+    ]
+    assert codes[-1] == 429
+
+
+def test_turning_totp_off_closes_the_other_sessions(client: TestClient) -> None:
+    headers = ready_admin(client)
+    enroll = client.post("/api/v1/auth/totp/enroll", headers=headers).json()
+    client.post("/api/v1/auth/totp/confirm", json={"code": code_of(enroll)}, headers=headers)
+    first = client.cookies[SESSION_COOKIE]
+    next_code = pyotp.TOTP(enroll["secret"]).at(int(time.time()) + 30)  # the confirmed one is used
+    headers = login(client, "admin", NEW_PASSWORD, totp_code=next_code)
+    body = {"password": NEW_PASSWORD}
+    assert client.post("/api/v1/auth/totp/disable", json=body, headers=headers).status_code == 204
+    assert client.get("/api/v1/auth/me").status_code == 200
+    client.cookies.clear()
+    client.cookies.set(SESSION_COOKIE, first)
+    assert client.get("/api/v1/auth/me").status_code == 401
+
+
+def test_public_without_trusted_proxy_warns(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.delenv("FORWARDED_ALLOW_IPS", raising=False)
+    with TestClient(create_app(make_settings(tmp_path, access="public"))):
+        pass
+    assert "HIVORA_PROJECT_TRUSTED_PROXY" in capsys.readouterr().err
 
 
 def test_totp_lifecycle(client: TestClient) -> None:

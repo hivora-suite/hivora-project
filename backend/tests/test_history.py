@@ -127,6 +127,13 @@ def test_checklist_and_comments_are_recorded(client: TestClient) -> None:
         "comment_deleted", "comment_edited", "comment_added",
         "check_removed", "check_done", "check_added", "created",
     ]  # fmt: skip
+    # A deleted comment leaves no text behind, in any of its events.
+    events = client.get(f"{route}/history").json()
+    assert all(
+        (e["old_value"], e["new_value"]) == ("", "")
+        for e in events
+        if e["action"].startswith("comment_")
+    )
 
 
 def test_history_follows_the_access_rules(client: TestClient) -> None:

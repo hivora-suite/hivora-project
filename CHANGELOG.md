@@ -2,6 +2,7 @@
 
 ## [Non publié]
 
+- Sécurité : limitation des essais étendue aux requêtes parallèles et aux vérifications depuis une session ; désactiver le TOTP ferme les autres sessions ; en-têtes contre l'affichage dans un cadre ; avertissement en mode `public` sans proxy de confiance ; l'historique ne garde plus le texte des commentaires.
 - Historique des modifications de chaque carte.
 - Commentaires sur les cartes.
 - Cartes : dates, checklist, étiquettes, plusieurs membres ; animations fluides du Kanban.

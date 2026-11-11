@@ -1,14 +1,18 @@
 # État du projet
 
-**Lot 7 terminé.**
+**Lot 8 en cours : revue de sécurité faite et corrigée.**
 
 ## Fait
 
 Comptes, rôles, projets, Kanban, cartes (dates, checklist, étiquettes, membres, historique), commentaires.
 
+Revue de sécurité (lot 8) :
+- Corrigé : essais en parallèle qui contournaient la limitation ; mot de passe et codes devinables sans limite depuis une session ; TOTP désactivé sans fermer les autres sessions ; en-têtes anti-cadre, `nosniff`, `Referrer-Policy` ; avertissement en mode `public` sans proxy de confiance ; texte des commentaires retiré de l'historique (D34, migration 0008).
+- Assumé et documenté dans `SECURITY.md` : blocage par nom d'utilisateur, Argon2 dans le processus principal, documentation de l'API publique.
+
 ## Prochaine étape
 
-Lot 8 : Release V1 (`roadmap.md`), dont la revue de sécurité.
+Lot 8, suite : mise à jour depuis `v0.1.0-rc.1` vers la nouvelle version (migration 0008 incluse), puis release V1 après accord.
 
 ## Actions ouvertes (utilisateur)
 

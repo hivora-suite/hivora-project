@@ -15,7 +15,7 @@ Ce document décrit des capacités, jamais une infrastructure réelle.
 
 ## Configuration
 
-Variables d'environnement préfixées `HIVORA_PROJECT_`. Mode d'accès (`lan` ou `public`) lu dans la configuration, jamais stocké en base. En mode `public`, derrière un reverse proxy HTTPS : TOTP obligatoire pour tous, cookies `Secure`, et adresse du proxy dans `HIVORA_PROJECT_TRUSTED_PROXY` pour que la limitation des essais voie la vraie adresse des clients.
+Variables d'environnement préfixées `HIVORA_PROJECT_`. Mode d'accès (`lan` ou `public`) lu dans la configuration, jamais stocké en base. En mode `public`, derrière un reverse proxy HTTPS : TOTP obligatoire pour tous, cookies `Secure`, et adresse du proxy dans `HIVORA_PROJECT_TRUSTED_PROXY` pour que la limitation des essais voie la vraie adresse des clients. Sans elle, tous les clients partagent l'adresse du proxy : quelques échecs de n'importe qui bloquent alors toutes les connexions, et un avertissement s'affiche au démarrage. Indiquer l'adresse exacte du proxy, telle que le conteneur la voit, jamais `*` : toute adresse pourrait alors se faire passer pour une autre.
 
 ## CI
 
