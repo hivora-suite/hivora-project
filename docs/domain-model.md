@@ -23,6 +23,7 @@ Modèle conceptuel. Le schéma réel vit dans les migrations Alembic, à partir 
 | `project` | identifiant, nom, description, créateur, création, archivage (réversible) |
 | `project_member` | projet, utilisateur, rôle de projet |
 | `project_pin` | projet, utilisateur : projets épinglés dans le menu du compte |
+| `calendar_event` | projet ou propriétaire (événement personnel, privé), titre, dates et heures (`HH:MM`, vides : journée entière) de début et de fin, couleur d'étiquette, note, auteur : élément daté du calendrier, hors Kanban |
 | `board_column` | identifiant, projet, nom, position |
 | `task` | identifiant, projet, colonne, titre, description, position, début, échéance, étiquettes, créateur, création, mise à jour |
 | `task_assignee` | tâche, utilisateur |

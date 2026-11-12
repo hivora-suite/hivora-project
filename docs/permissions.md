@@ -28,6 +28,9 @@
 | Modifier, archiver ou réactiver le projet | Oui | Non | Non |
 | Supprimer définitivement le projet | Oui | Non | Non |
 | Épingler le projet dans son menu | Oui | Oui | Oui |
+| Créer, modifier, supprimer un événement du calendrier | Oui | Oui | Non |
+
+Un événement personnel (Mon planning) n'est visible et modifiable que par son propriétaire, administrateurs compris.
 | Gérer les membres et leurs rôles | Oui | Non | Non |
 | Gérer les colonnes | Oui | Non | Non |
 | Créer, modifier, déplacer, assigner une tâche | Oui | Oui | Non |

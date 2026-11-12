@@ -11,6 +11,7 @@ from hivora_project.task.models import BoardColumn, Task
 from hivora_project.web.deps import Member, RuntimeDep
 
 router = APIRouter(tags=["board"])
+me_router = APIRouter(tags=["board"])
 
 Title = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 ColumnName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=60)]
@@ -128,6 +129,19 @@ def task_out(t: Task) -> TaskOut:
         assignee_ids=[a.user_id for a in t.assignees],
         checklist=[ChecklistItemOut(id=i.id, title=i.title, done=i.done) for i in t.checklist],
     )
+
+
+class MyTaskOut(TaskOut):
+    project_id: int
+    project_name: str
+
+
+@me_router.get("/tasks")
+async def my_tasks(principal: Member, rt: RuntimeDep) -> list[MyTaskOut]:
+    return [
+        MyTaskOut(**task_out(t).model_dump(), project_id=p.id, project_name=p.name)
+        for t, p in await rt.tasks.my_tasks(actor(principal))
+    ]
 
 
 @router.get("/{project_id}/board")

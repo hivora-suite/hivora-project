@@ -9,7 +9,7 @@ Le noyau `core` (configuration, erreurs, base, horloge, bus d'événements) rest
 | **Task** | V1 | Cartes (dates, checklist, étiquettes, assignés, historique), colonnes, déplacement, commentaires | `task`, `task_assignee`, `checklist_item`, `task_event`, `board_column`, `comment` | Project, Member |
 | **Notification** | V1.1 | Événements vers notifications, lu/non lu | `notification` | Member, événements via `core` |
 | **Attachment** | V1.1 | Stockage, téléchargement, quotas | `attachment` | Task, Member |
-| **Planning** | V1.2, V2 | Calendrier, dépendances, Gantt | `milestone`, `task_dependency` | Task, Project, Member |
+| **Planning** | V1, V1.2, V2 | Calendrier et événements (V1), jalons, dépendances, Gantt | `calendar_event`, `milestone`, `task_dependency` | Task, Project, Member |
 | **TimeTracking** | V1.2 | Temps estimé et passé, totaux | `time_entry` | Task, Member |
 
 ## Frontières

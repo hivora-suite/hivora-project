@@ -120,14 +120,67 @@ test("the admin signs in, replaces the initial password, creates an account, sig
   await expect(page.getByRole("region").first()).toHaveAccessibleName("En cours");
 
   // The planning tab: the card on its due date, opened from the calendar.
-  await page.getByRole("link", { name: "Planning" }).click();
+  await page.getByRole("link", { name: "Planning", exact: true }).click();
   await expect(page).toHaveURL(/\/project\/planning\//);
-  const month = page.locator("h2[aria-live]");
-  for (let i = 0; i < 120 && (await month.textContent()) !== "juin 2030"; i++) await page.getByRole("button", { name: "Mois suivant" }).click();
+  const toJune2030 = async () => {
+    const month = page.locator("h2[aria-live]");
+    for (let i = 0; i < 120 && (await month.textContent()) !== "juin 2030"; i++) await page.getByRole("button", { name: "Suivant", exact: true }).click();
+  };
+  await toJune2030();
   const day = page.getByRole("group", { name: /15 juin 2030/ });
   await day.getByRole("button", { name: "Rédiger le brief client" }).click();
-  await expect(page.getByRole("dialog").getByRole("heading", { level: 2 })).toContainText("Rédiger le brief client");
+  await expect(dialog.getByRole("heading", { level: 2 })).toContainText("Rédiger le brief client");
+  await dialog.getByRole("button", { name: "Membres" }).click();
+  await dialog.getByRole("checkbox", { name: "admin" }).check();
   await page.getByRole("button", { name: "Fermer" }).click();
+  // An event of the project, added on a day of the calendar.
+  await page.getByRole("button", { name: /Ajouter un événement le .*20 juin 2030/ }).click();
+  await page.locator("#event-title").fill("Atelier client");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await page.getByRole("group", { name: /20 juin 2030/ }).getByRole("button", { name: "Atelier client" }).click();
+  await expect(page.locator("#event-title")).toHaveValue("Atelier client");
+  await page.getByRole("button", { name: "Annuler" }).click();
+  // Ctrl + click picks days apart: one event on each.
+  await expect(page.getByText("Ctrl + clic pour sélectionner plusieurs jours")).toBeVisible();
+  for (const name of ["lundi 3 juin 2030", "mercredi 5 juin 2030", "vendredi 7 juin 2030"])
+    await page.getByRole("group", { name, exact: true }).click({ modifiers: ["Control"], position: { x: 40, y: 70 } });
+  await expect(page.getByText("3 jours sélectionnés")).toBeVisible();
+  await page.getByRole("button", { name: "Créer un événement" }).click();
+  await page.locator("#event-title").fill("Permanence");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(page.getByRole("button", { name: "Permanence" })).toHaveCount(3);
+  // My planning: the cards assigned to me, each opening on its board.
+  await page.getByRole("link", { name: "Mon planning" }).click();
+  await expect(page).toHaveURL(/\/planning\/$/);
+  await toJune2030();
+  // A personal event, created there like on a project's planning.
+  await page.getByRole("button", { name: /Ajouter un événement le .*12 juin 2030/ }).click();
+  await expect(dialog.getByText("Événement personnel")).toBeVisible();
+  await page.locator("#event-title").fill("Rendez-vous banque");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(page.getByRole("group", { name: /12 juin 2030/ }).getByRole("button", { name: "Rendez-vous banque" })).toBeVisible();
+  await page.getByRole("button", { name: /Rédiger le brief client/ }).click();
+  await expect(dialog.getByRole("heading", { level: 2 })).toContainText("Rédiger le brief client");
+  await page.getByRole("button", { name: "Fermer" }).click();
+  await page.getByRole("link", { name: "Planning", exact: true }).click();
+  // Week view: dragging over the hours drafts a timed event.
+  await expect(page).toHaveURL(/\/project\/planning\//);
+  await toJune2030();
+  await page.getByRole("button", { name: "Semaine" }).click();
+  const column = page.getByRole("group", { name: /2 juin 2030/ });
+  const box = (await column.boundingBox())!;
+  await page.mouse.move(box.x + 20, box.y + 10 * 48 + 5);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 20, box.y + 10.75 * 48 + 5, { steps: 5 });
+  await page.mouse.up();
+  await expect(page.locator("#event-start-time")).toHaveValue("10:00");
+  await expect(page.locator("#event-end-time")).toHaveValue("11:00");
+  await page.locator("#event-title").fill("Point d'équipe");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(column.getByRole("button", { name: /Point d'équipe/ })).toBeVisible();
+  await page.getByRole("button", { name: "Année" }).click();
+  await expect(page.locator("h2[aria-live]")).toHaveText("2030");
+  await page.getByRole("button", { name: "Mois" }).click();
   // The open project is pinned or unpinned from its title in the side menu.
   const pinOpen = page.getByRole("navigation").getByRole("button", { name: "Épingler Site vitrine dans le menu" });
   await pinOpen.click();

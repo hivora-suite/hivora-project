@@ -11,7 +11,8 @@ from hivora_project.core.clock import Clock
 from hivora_project.core.errors import ConflictError, NotFoundError, ValidationError
 from hivora_project.member import access
 from hivora_project.member.access import Actor
-from hivora_project.member.models import ProjectRole
+from hivora_project.member.models import ProjectMember, ProjectRole, Role
+from hivora_project.project.models import Project
 from hivora_project.project.service import open_project
 from hivora_project.task import history
 from hivora_project.task.models import BoardColumn, ChecklistItem, Task, TaskAssignee, TaskEvent
@@ -146,6 +147,28 @@ class TaskService:
                 select(Task).where(Task.project_id == project_id).order_by(Task.position, Task.id)
             )
             return Board(await _columns(session, project_id), list(tasks))
+
+    async def my_tasks(self, actor: Actor) -> list[tuple[Task, Project]]:
+        """The dated cards assigned to the actor, in the open projects they can reach."""
+        async with self.sessions() as session:
+            query = (
+                select(Task, Project)
+                .join(TaskAssignee, TaskAssignee.task_id == Task.id)
+                .join(Project, Project.id == Task.project_id)
+                .where(
+                    TaskAssignee.user_id == actor.user_id,
+                    Project.archived_at.is_(None),
+                    (Task.start_date.is_not(None)) | (Task.due_date.is_not(None)),
+                )
+            )
+            if actor.role is not Role.ADMIN:
+                query = query.join(
+                    ProjectMember,
+                    (ProjectMember.project_id == Task.project_id)
+                    & (ProjectMember.user_id == actor.user_id),
+                )
+            rows = await session.execute(query.order_by(Task.due_date, Task.id))
+            return [(task, project) for task, project in rows]
 
     # --- columns (managers) --------------------------------------------------
     async def create_column(self, actor: Actor, project_id: int, name: str) -> BoardColumn:

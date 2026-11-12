@@ -17,6 +17,8 @@ import {
   type SessionInfo,
   type TaskComment,
   type TaskEvent,
+  type CalendarEvent,
+  type MyTask,
   type User,
 } from "./client";
 
@@ -162,6 +164,25 @@ export const boardApi = {
     api<void>(`/projects/${id}/checklist/${itemId}`, { method: "DELETE" }),
   deleteTask: ({ id, taskId }: { id: number; taskId: number }) =>
     api<void>(`/projects/${id}/tasks/${taskId}`, { method: "DELETE" }),
+};
+
+export const useEvents = (id: number) =>
+  useQuery({ queryKey: [...keys.projects, id, "events"], queryFn: () => api<CalendarEvent[]>(`/projects/${id}/events`) });
+
+/** The dated cards assigned to me in all my projects; under `projects`, so card changes refresh it. */
+export const useMyTasks = () => useQuery({ queryKey: [...keys.projects, "mine"], queryFn: () => api<MyTask[]>("/me/tasks") });
+
+/** My personal events: no project, only I see them. */
+export const useMyEvents = () => useQuery({ queryKey: [...keys.projects, "mine", "events"], queryFn: () => api<CalendarEvent[]>("/me/events") });
+
+type EventFields = Omit<CalendarEvent, "id">;
+/** `id` is the project, or null for my personal events. */
+const events = (id: number | null) => (id === null ? "/me/events" : `/projects/${id}/events`);
+export const eventApi = {
+  create: ({ id, ...b }: EventFields & { id: number | null }) => api<CalendarEvent>(events(id), { method: "POST", body: b }),
+  update: ({ id, eventId, ...b }: Partial<EventFields> & { id: number | null; eventId: number }) =>
+    api<CalendarEvent>(`${events(id)}/${eventId}`, { method: "PATCH", body: b }),
+  remove: ({ id, eventId }: { id: number | null; eventId: number }) => api<void>(`${events(id)}/${eventId}`, { method: "DELETE" }),
 };
 
 export const useComments = (id: number, taskId: number) =>

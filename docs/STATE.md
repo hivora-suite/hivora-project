@@ -6,9 +6,9 @@
 
 Comptes, rôles, projets, Kanban, cartes (dates, checklist, étiquettes, membres, historique), commentaires.
 
-Onglet Planning : calendrier du mois avec les cartes datées, fiche ouverte au clic (D36).
+Planning (D36, migrations 0010-0012) : vues jour, semaine, mois, année ; cartes datées et événements du projet, avec heures ou sur la journée, créés en glissant ou sur plusieurs jours choisis (Ctrl + clic) ; « Mon planning » : mes cartes de tous mes projets et mes événements privés.
 
-Projets épinglés par compte dans le menu (épingle sur la page Projets et au bout du titre du projet ouvert, migration 0009), suppression définitive d'un projet, 12 couleurs d'étiquettes (D35), confirmations dans le style de l'application.
+Projets épinglés dans le menu (migration 0009), suppression d'un projet, 12 couleurs d'étiquettes (D35), confirmations intégrées.
 
 Revue de sécurité (lot 8) :
 - Corrigé : essais en parallèle qui contournaient la limitation ; mot de passe et codes devinables sans limite depuis une session ; TOTP désactivé sans fermer les autres sessions ; en-têtes anti-cadre, `nosniff`, `Referrer-Policy` ; avertissement en mode `public` sans proxy de confiance ; texte des commentaires retiré de l'historique (D34, migration 0008).

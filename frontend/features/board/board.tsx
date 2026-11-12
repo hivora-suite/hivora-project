@@ -1,6 +1,7 @@
 "use client";
 
 import { MoreHorizontal, Plus } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { Fragment, useRef, useState, type DragEvent } from "react";
 
 import { useAsk } from "@/components/ask";
@@ -149,7 +150,8 @@ export function Board({ project }: { project: Project }) {
   const ask = useAsk();
   const { data: board, error } = useBoard(project.id);
   const { data: members = [] } = useMembers(project.id);
-  const [openId, setOpenId] = useState<number | null>(null);
+  const task = Number(useSearchParams().get("task")); // from My planning
+  const [openId, setOpenId] = useState<number | null>(task || null);
   const [dragId, setDragId] = useState<number | null>(null);
   const [over, setOver] = useState<Drop | null>(null);
   const addColumn = useProjectMutation(boardApi.createColumn);

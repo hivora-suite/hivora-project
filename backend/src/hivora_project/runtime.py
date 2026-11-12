@@ -12,6 +12,7 @@ from hivora_project.core.crypto.cipher import SecretBox, load_or_create_master_k
 from hivora_project.core.db.engine import make_engine, make_sessionmaker
 from hivora_project.core.db.migrate import prepare_schema
 from hivora_project.member.service import AuthService
+from hivora_project.planning.service import EventService
 from hivora_project.project.service import ProjectService
 from hivora_project.task.comments import CommentService
 from hivora_project.task.service import TaskService, create_default_columns, release_assignee
@@ -25,6 +26,7 @@ class Runtime:
     projects: ProjectService
     tasks: TaskService
     comments: CommentService
+    events: EventService
 
     @classmethod
     def build(cls, settings: Settings) -> "Runtime":
@@ -40,7 +42,8 @@ class Runtime:
         )
         tasks = TaskService(sessions=sessions, clock=auth.clock)
         comments = CommentService(sessions=sessions, clock=auth.clock)
-        return cls(settings, engine, auth, projects, tasks, comments)
+        events = EventService(sessions=sessions)
+        return cls(settings, engine, auth, projects, tasks, comments, events)
 
     async def start(self) -> None:
         if self.settings.access == "public" and os.environ.get(
