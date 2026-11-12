@@ -30,7 +30,7 @@
 | Épingler le projet dans son menu | Oui | Oui | Oui |
 | Créer, modifier, supprimer un événement du calendrier | Oui | Oui | Non |
 
-Un événement personnel (Mon planning) n'est visible et modifiable que par son propriétaire, administrateurs compris.
+Un événement personnel (Mon planning) et le projet personnel (Tâches perso de Mon kanban) ne sont visibles et modifiables que par leur propriétaire, administrateurs compris. Le projet personnel n'a ni membres, ni épingle, ni archivage, ni suppression ; il part avec le compte.
 | Gérer les membres et leurs rôles | Oui | Non | Non |
 | Gérer les colonnes | Oui | Non | Non |
 | Créer, modifier, déplacer, assigner une tâche | Oui | Oui | Non |

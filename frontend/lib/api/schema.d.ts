@@ -160,6 +160,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/board": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Board
+         * @description My cards in every shared project (not my personal one), with my role in each.
+         */
+        get: operations["my_board_api_v1_me_board_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/board/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Move Mine
+         * @description Moves a card on My kanban: mine for real, a project card only in my own order.
+         */
+        post: operations["move_mine_api_v1_me_board_move_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/events": {
         parameters: {
             query?: never;
@@ -196,15 +236,15 @@ export interface paths {
         patch: operations["update_my_event_api_v1_me_events__event_id__patch"];
         trace?: never;
     };
-    "/api/v1/me/tasks": {
+    "/api/v1/me/project": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** My Tasks */
-        get: operations["my_tasks_api_v1_me_tasks_get"];
+        /** My Project */
+        get: operations["my_project_api_v1_me_project_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -926,6 +966,33 @@ export interface components {
             project_id: number;
             role: components["schemas"]["ProjectRole"];
         };
+        /** MyBoardOut */
+        MyBoardOut: {
+            /** Projects */
+            projects: components["schemas"]["MyProjectOut"][];
+            /** Tasks */
+            tasks: components["schemas"]["MyTaskOut"][];
+        };
+        /** MyMoveIn */
+        MyMoveIn: {
+            /**
+             * Column Id
+             * @description A column of mine; null: back to project tasks
+             */
+            column_id: number | null;
+            /** Position */
+            position: number;
+            /** Task Id */
+            task_id: number;
+        };
+        /** MyProjectOut */
+        MyProjectOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            role: components["schemas"]["ProjectRole"];
+        };
         /** MyTaskOut */
         MyTaskOut: {
             /** Assignee Ids */
@@ -942,12 +1009,17 @@ export interface components {
             id: number;
             /** Labels */
             labels: ("red" | "orange" | "amber" | "lime" | "green" | "teal" | "cyan" | "blue" | "indigo" | "violet" | "pink" | "gray")[];
+            /**
+             * Personal Column Id
+             * @description My kanban column it is filed in
+             */
+            personal_column_id: number | null;
+            /** Personal Position */
+            personal_position: number | null;
             /** Position */
             position: number;
             /** Project Id */
             project_id: number;
-            /** Project Name */
-            project_name: string;
             /** Start Date */
             start_date: string | null;
             /** Title */
@@ -996,6 +1068,11 @@ export interface components {
             id: number;
             /** Name */
             name: string;
+            /**
+             * Personal
+             * @description The account's own project (My kanban), seen only by it
+             */
+            personal: boolean;
             /**
              * Pinned
              * @description Shown in the account's side menu
@@ -1436,6 +1513,57 @@ export interface operations {
             };
         };
     };
+    my_board_api_v1_me_board_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyBoardOut"];
+                };
+            };
+        };
+    };
+    move_mine_api_v1_me_board_move_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MyMoveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     my_events_api_v1_me_events_get: {
         parameters: {
             query?: never;
@@ -1553,9 +1681,11 @@ export interface operations {
             };
         };
     };
-    my_tasks_api_v1_me_tasks_get: {
+    my_project_api_v1_me_project_get: {
         parameters: {
-            query?: never;
+            query?: {
+                language?: "fr" | "en";
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1568,7 +1698,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MyTaskOut"][];
+                    "application/json": components["schemas"]["ProjectOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

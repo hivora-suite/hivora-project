@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { TaskDialog } from "@/features/board/task-dialog";
 import type { BoardTask, CalendarEvent, Project } from "@/lib/api/client";
-import { useBoard, useEvents, useMembers, useMyEvents, useMyTasks } from "@/lib/api/hooks";
+import { useBoard, useEvents, useMembers, useMyBoard, useMyEvents, useMyProject } from "@/lib/api/hooks";
 import { useI18n } from "@/lib/i18n";
 
 import { iso } from "./dates";
@@ -69,17 +69,26 @@ export function Calendar({ project }: { project: Project }) {
   );
 }
 
-/** My calendar: my personal events, and the dated cards assigned to me in every project (each opens on its board). */
+/** My calendar: my personal events and cards, and the dated cards assigned to me in every project (each opens on its board). */
 export function MyCalendar() {
-  const { errorMessage } = useI18n();
+  const { t, lang, errorMessage } = useI18n();
   const router = useRouter();
-  const { data: tasks = [], error } = useMyTasks();
+  const { data: board, error } = useMyBoard();
+  const { data: personal } = useMyProject(lang);
+  const { data: own } = useBoard(personal?.id ?? 0);
+  const [openId, setOpenId] = useState<number | null>(null);
   const { data: events = [], error: eventsError } = useMyEvents();
   const [event, setEvent] = useState<CalendarEvent | Draft | null>(null);
   const today = iso(new Date());
   const items = [
     ...events.map((e) => eventItem(e, setEvent)),
-    ...tasks.map((task) => taskItem(task, today, () => router.push(`/project/?id=${task.project_id}&task=${task.id}`), task.project_name)).filter(isItem),
+    ...(board?.tasks ?? [])
+      .map((task) => {
+        const name = board?.projects.find((p) => p.id === task.project_id)?.name;
+        return taskItem(task, today, () => router.push(`/project/?id=${task.project_id}&task=${task.id}`), name);
+      })
+      .filter(isItem),
+    ...(own?.tasks.map((task) => taskItem(task, today, () => setOpenId(task.id), t("kanban.personal"))).filter(isItem) ?? []),
   ];
   const failure = error ?? eventsError;
   return (
@@ -87,6 +96,7 @@ export function MyCalendar() {
       {failure && <Alert tone="danger">{errorMessage(failure)}</Alert>}
       <Planner items={items} onCreate={setEvent} />
       <EventDialog projectId={null} event={event} canEdit onClose={() => setEvent(null)} />
+      {personal && <TaskDialog projectId={personal.id} task={own?.tasks.find((task) => task.id === openId)} members={[]} canEdit canManage onClose={() => setOpenId(null)} />}
     </div>
   );
 }

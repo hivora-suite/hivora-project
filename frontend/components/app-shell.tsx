@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, LayoutGrid, LogOut, Menu, Settings, Users } from "lucide-react";
+import { CalendarDays, LayoutGrid, LogOut, SquareKanban, Menu, Settings, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Suspense, createContext, useContext, useEffect, useState, type ReactNode } from "react";
@@ -37,6 +37,7 @@ type NavItem = { href: string; label: MessageKey; icon: typeof LayoutGrid; role:
 
 const NAV: NavItem[] = [
   { href: "/", label: "home.title", icon: LayoutGrid, role: "member" },
+  { href: "/kanban/", label: "nav.kanban", icon: SquareKanban, role: "member" },
   { href: "/planning/", label: "nav.planning", icon: CalendarDays, role: "member" },
   { href: "/users/", label: "nav.users", icon: Users, role: "admin" },
   { href: "/settings/", label: "nav.settings", icon: Settings, role: "member" },

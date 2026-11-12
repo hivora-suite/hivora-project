@@ -24,6 +24,7 @@ class ProjectOut(BaseModel):
     role: ProjectRole
     archived: bool
     pinned: bool = Field(description="Shown in the account's side menu")
+    personal: bool = Field(description="The account's own project (My kanban), seen only by it")
     created_at: datetime
 
 
@@ -66,6 +67,7 @@ def project_out(view: ProjectView) -> ProjectOut:
         role=view.role,
         archived=project.archived_at is not None,
         pinned=view.pinned,
+        personal=project.owner_id is not None,
         created_at=project.created_at,
     )
 
@@ -152,3 +154,14 @@ async def set_member(
 @router.delete("/{project_id}/members/{user_id}", status_code=204)
 async def remove_member(project_id: int, user_id: int, principal: Member, rt: RuntimeDep) -> None:
     await rt.projects.remove_member(actor(principal), project_id, user_id)
+
+
+# /api/v1/me/project: the account's personal project, created on first use.
+me_router = APIRouter(tags=["projects"])
+
+
+@me_router.get("/project")
+async def my_project(
+    principal: Member, rt: RuntimeDep, language: Literal["fr", "en"] = "fr"
+) -> ProjectOut:
+    return project_out(await rt.projects.personal(actor(principal), language))

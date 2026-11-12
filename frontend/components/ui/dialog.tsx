@@ -20,7 +20,7 @@ export function DialogContent({
 }: Omit<ComponentProps<typeof D.Content>, "title"> & { title: ReactNode; description?: ReactNode; closeLabel: string }) {
   return (
     <D.Portal>
-      <D.Overlay className="animate-overlay fixed inset-0 z-40 bg-black/40" />
+      <D.Overlay className="animate-overlay fixed inset-0 z-50 bg-black/40" />
       <D.Content
         className={cn(
           "animate-dialog fixed left-1/2 top-1/2 z-50 grid max-h-[90vh] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto rounded-xl border bg-card p-6 shadow-lg",

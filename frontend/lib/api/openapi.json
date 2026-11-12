@@ -663,6 +663,84 @@
         "title": "MembershipOut",
         "type": "object"
       },
+      "MyBoardOut": {
+        "properties": {
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/MyProjectOut"
+            },
+            "title": "Projects",
+            "type": "array"
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/MyTaskOut"
+            },
+            "title": "Tasks",
+            "type": "array"
+          }
+        },
+        "required": [
+          "projects",
+          "tasks"
+        ],
+        "title": "MyBoardOut",
+        "type": "object"
+      },
+      "MyMoveIn": {
+        "properties": {
+          "column_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A column of mine; null: back to project tasks",
+            "title": "Column Id"
+          },
+          "position": {
+            "minimum": 0.0,
+            "title": "Position",
+            "type": "integer"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "task_id",
+          "column_id",
+          "position"
+        ],
+        "title": "MyMoveIn",
+        "type": "object"
+      },
+      "MyProjectOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/ProjectRole"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "role"
+        ],
+        "title": "MyProjectOut",
+        "type": "object"
+      },
       "MyTaskOut": {
         "properties": {
           "assignee_ids": {
@@ -724,6 +802,29 @@
             "title": "Labels",
             "type": "array"
           },
+          "personal_column_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "My kanban column it is filed in",
+            "title": "Personal Column Id"
+          },
+          "personal_position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Personal Position"
+          },
           "position": {
             "title": "Position",
             "type": "integer"
@@ -731,10 +832,6 @@
           "project_id": {
             "title": "Project Id",
             "type": "integer"
-          },
-          "project_name": {
-            "title": "Project Name",
-            "type": "string"
           },
           "start_date": {
             "anyOf": [
@@ -765,7 +862,8 @@
           "assignee_ids",
           "checklist",
           "project_id",
-          "project_name"
+          "personal_column_id",
+          "personal_position"
         ],
         "title": "MyTaskOut",
         "type": "object"
@@ -857,6 +955,11 @@
             "title": "Name",
             "type": "string"
           },
+          "personal": {
+            "description": "The account's own project (My kanban), seen only by it",
+            "title": "Personal",
+            "type": "boolean"
+          },
           "pinned": {
             "description": "Shown in the account's side menu",
             "title": "Pinned",
@@ -873,6 +976,7 @@
           "role",
           "archived",
           "pinned",
+          "personal",
           "created_at"
         ],
         "title": "ProjectOut",
@@ -1720,6 +1824,63 @@
         ]
       }
     },
+    "/api/v1/me/board": {
+      "get": {
+        "description": "My cards in every shared project (not my personal one), with my role in each.",
+        "operationId": "my_board_api_v1_me_board_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBoardOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "My Board",
+        "tags": [
+          "board"
+        ]
+      }
+    },
+    "/api/v1/me/board/move": {
+      "post": {
+        "description": "Moves a card on My kanban: mine for real, a project card only in my own order.",
+        "operationId": "move_mine_api_v1_me_board_move_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MyMoveIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Move Mine",
+        "tags": [
+          "board"
+        ]
+      }
+    },
     "/api/v1/me/events": {
       "get": {
         "operationId": "my_events_api_v1_me_events_get",
@@ -1869,28 +2030,50 @@
         ]
       }
     },
-    "/api/v1/me/tasks": {
+    "/api/v1/me/project": {
       "get": {
-        "operationId": "my_tasks_api_v1_me_tasks_get",
+        "operationId": "my_project_api_v1_me_project_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "default": "fr",
+              "enum": [
+                "fr",
+                "en"
+              ],
+              "title": "Language",
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/MyTaskOut"
-                  },
-                  "title": "Response My Tasks Api V1 Me Tasks Get",
-                  "type": "array"
+                  "$ref": "#/components/schemas/ProjectOut"
                 }
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
-        "summary": "My Tasks",
+        "summary": "My Project",
         "tags": [
-          "board"
+          "projects"
         ]
       }
     },

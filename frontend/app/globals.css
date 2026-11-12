@@ -324,6 +324,11 @@ label:has(> span > input:not(:disabled)) {
 
 /* ---- Depth ---- */
 /* Raised surface (cards, panels): layered shadow + a light top edge. */
+/* A board's row of columns: its scrollbar shows, a little stronger under the pointer. */
+@utility lane-scroll {
+  scrollbar-color: var(--border) transparent;
+  &:hover { scrollbar-color: var(--muted-foreground) transparent; }
+}
 @utility surface {
   background-color: var(--card);
   box-shadow: inset 0 1px 0 var(--highlight), var(--shadow-md);

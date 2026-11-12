@@ -10,8 +10,9 @@ import { LABELS } from "./labels";
 
 const today = () => new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD, local time
 
-export function TaskCard({ task, members, draggable, dragging, onOpen, onStep, onDragStart, onDragEnd }: {
+export function TaskCard({ task, hint, members, draggable, dragging, onOpen, onStep, onDragStart, onDragEnd }: {
   task: BoardTask;
+  hint?: string; // its project, when cards of several projects mix (My kanban)
   members: ProjectMember[];
   draggable: boolean;
   dragging: boolean;
@@ -39,6 +40,7 @@ export function TaskCard({ task, members, draggable, dragging, onOpen, onStep, o
         dragging && "opacity-40",
       )}
     >
+      {hint && <span className="-mb-1 truncate text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{hint}</span>}
       {task.labels.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {task.labels.map((label) => (

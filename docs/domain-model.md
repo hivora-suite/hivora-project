@@ -20,9 +20,10 @@ Modèle conceptuel. Le schéma réel vit dans les migrations Alembic, à partir 
 |---|---|
 | `user` | identifiant, nom d'utilisateur, empreinte du mot de passe, rôle d'instance, désactivé, mot de passe à changer, secret TOTP chiffré, TOTP actif, empreintes des codes de secours |
 | `session` | identifiant, utilisateur, empreinte du jeton, jeton CSRF, création, expiration |
-| `project` | identifiant, nom, description, créateur, création, archivage (réversible) |
+| `project` | identifiant, nom, description, créateur, création, archivage (réversible), propriétaire (projet personnel de Mon kanban, sinon vide) |
 | `project_member` | projet, utilisateur, rôle de projet |
 | `project_pin` | projet, utilisateur : projets épinglés dans le menu du compte |
+| `task_placement` | compte, carte d'un projet, colonne perso, position : mon classement dans Mon kanban, sans toucher la carte |
 | `calendar_event` | projet ou propriétaire (événement personnel, privé), titre, dates et heures (`HH:MM`, vides : journée entière) de début et de fin, couleur d'étiquette, note, auteur : élément daté du calendrier, hors Kanban |
 | `board_column` | identifiant, projet, nom, position |
 | `task` | identifiant, projet, colonne, titre, description, position, début, échéance, étiquettes, créateur, création, mise à jour |

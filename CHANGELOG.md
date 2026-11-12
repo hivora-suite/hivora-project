@@ -2,6 +2,7 @@
 
 ## [Non publié]
 
+- Kanban : l'onglet Tableau devient Kanban ; « Mon kanban » réunit mes cartes de tous les projets, que je range parmi mes tâches perso dans mes propres colonnes, dans un seul ordre ; fond sombre sous les confirmations ouvertes depuis une carte.
 - Planning : calendrier du mois de chaque projet, cartes de leur début à leur échéance, événements du projet avec heures ou sur la journée, vues jour, semaine, mois et année, glisser pour créer, un même événement sur plusieurs jours choisis avec Ctrl + clic ; « Mon planning » avec mes cartes de tous mes projets et mes événements privés.
 - Projets : suppression définitive ; épinglage par compte dans le menu, depuis la page Projets ou le titre du projet ouvert.
 - Étiquettes : 12 couleurs ; confirmations et saisies dans le style de l'application.

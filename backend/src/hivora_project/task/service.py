@@ -15,12 +15,21 @@ from hivora_project.member.models import ProjectMember, ProjectRole, Role
 from hivora_project.project.models import Project
 from hivora_project.project.service import open_project
 from hivora_project.task import history
-from hivora_project.task.models import BoardColumn, ChecklistItem, Task, TaskAssignee, TaskEvent
+from hivora_project.task.models import (
+    BoardColumn,
+    ChecklistItem,
+    Task,
+    TaskAssignee,
+    TaskEvent,
+    TaskPlacement,
+)
 
 DEFAULT_COLUMNS = {
     "fr": ("À faire", "En cours", "Terminé"),
     "en": ("To do", "In progress", "Done"),
 }
+# A personal project (My kanban) starts with its own inbox column.
+PERSONAL_FIRST_COLUMN = {"fr": "Tâches perso", "en": "Personal tasks"}
 
 
 class TaskNotFoundError(NotFoundError):
@@ -64,10 +73,15 @@ def place(siblings: Sequence[Positioned], item: Positioned, position: int | None
         entry.position = index
 
 
-async def create_default_columns(session: AsyncSession, project_id: int, language: str) -> None:
+async def create_default_columns(
+    session: AsyncSession, project_id: int, language: str, personal: bool
+) -> None:
+    names = DEFAULT_COLUMNS[language]
+    if personal:
+        names = (PERSONAL_FIRST_COLUMN[language], *names[1:])
     session.add_all(
         BoardColumn(project_id=project_id, name=name, position=index)
-        for index, name in enumerate(DEFAULT_COLUMNS[language])
+        for index, name in enumerate(names)
     )
 
 
@@ -135,6 +149,12 @@ class Board:
     tasks: list[Task]
 
 
+@dataclass(frozen=True, slots=True)
+class MyBoard:
+    projects: list[tuple[Project, ProjectRole]]
+    tasks: list[tuple[Task, int | None, int | None]]  # with the column of mine it is filed in
+
+
 class TaskService:
     def __init__(self, *, sessions: async_sessionmaker[AsyncSession], clock: Clock) -> None:
         self.sessions = sessions
@@ -148,17 +168,18 @@ class TaskService:
             )
             return Board(await _columns(session, project_id), list(tasks))
 
-    async def my_tasks(self, actor: Actor) -> list[tuple[Task, Project]]:
-        """The dated cards assigned to the actor, in the open projects they can reach."""
+    async def my_board(self, actor: Actor) -> "MyBoard":
+        """The cards assigned to the actor in the open shared projects they can reach,
+        with the actor's role in each."""
         async with self.sessions() as session:
             query = (
-                select(Task, Project)
+                select(Task, Project, TaskPlacement.column_id, TaskPlacement.position)
                 .join(TaskAssignee, TaskAssignee.task_id == Task.id)
                 .join(Project, Project.id == Task.project_id)
                 .where(
                     TaskAssignee.user_id == actor.user_id,
                     Project.archived_at.is_(None),
-                    (Task.start_date.is_not(None)) | (Task.due_date.is_not(None)),
+                    Project.owner_id.is_(None),
                 )
             )
             if actor.role is not Role.ADMIN:
@@ -167,8 +188,87 @@ class TaskService:
                     (ProjectMember.project_id == Task.project_id)
                     & (ProjectMember.user_id == actor.user_id),
                 )
-            rows = await session.execute(query.order_by(Task.due_date, Task.id))
-            return [(task, project) for task, project in rows]
+            query = query.outerjoin(
+                TaskPlacement,
+                (TaskPlacement.task_id == Task.id) & (TaskPlacement.user_id == actor.user_id),
+            )
+            order = (TaskPlacement.position, Task.position, Task.id)
+            rows = list(await session.execute(query.order_by(*order)))
+            projects = {project.id: project for _, project, _, _ in rows}
+            roles = {
+                pid: ProjectRole.MANAGER
+                if actor.role is Role.ADMIN
+                else await access.project_role(session, actor, pid, ProjectRole.VIEWER)
+                for pid in projects
+            }
+            return MyBoard(
+                [(projects[pid], role) for pid, role in roles.items()],
+                [(task, column, position) for task, _, column, position in rows],
+            )
+
+    async def move_mine(
+        self, actor: Actor, task_id: int, column_id: int | None, position: int
+    ) -> None:
+        """A move on My kanban. One of my cards moves for real; a shared project card assigned
+        to me is only filed in my column (None: back among the project tasks), its project
+        column unchanged. Both kinds share one order per column of mine."""
+        async with self.sessions() as session, session.begin():
+            task = await session.get(Task, task_id)
+            project = await session.get(Project, task.project_id) if task else None
+            if task is None or project is None:
+                raise TaskNotFoundError(str(task_id))
+            column = await session.get(BoardColumn, column_id) if column_id else None
+            home = await session.get(Project, column.project_id) if column else None
+            mine_column = column if home and home.owner_id == actor.user_id else None
+            item: Task | TaskPlacement
+            if project.owner_id == actor.user_id:
+                if mine_column is None:
+                    raise ColumnNotFoundError(str(column_id))
+                if task.column_id != mine_column.id:
+                    previous = await _column(session, task.project_id, task.column_id)
+                    await history.record(
+                        session,
+                        task.id,
+                        actor.user_id,
+                        "moved",
+                        self.clock.now(),
+                        mine_column.name,
+                        old=previous.name,
+                        new=mine_column.name,
+                    )
+                task.column_id, task.updated_at = mine_column.id, self.clock.now()
+                item = task
+            else:
+                assigned = await session.get(TaskAssignee, (task_id, actor.user_id))
+                if project.owner_id is not None or assigned is None:
+                    raise TaskNotFoundError(str(task_id))
+                filed = await session.get(TaskPlacement, (actor.user_id, task_id))
+                if column_id is None:
+                    if filed is not None:
+                        await session.delete(filed)
+                    return
+                if mine_column is None:
+                    raise ColumnNotFoundError(str(column_id))
+                if filed is None:
+                    filed = TaskPlacement(user_id=actor.user_id, task_id=task_id, position=0)
+                    session.add(filed)
+                filed.column_id = mine_column.id
+                item = filed
+            own = await session.scalars(
+                select(Task).where(Task.column_id == mine_column.id, Task.id != task_id)
+            )
+            others = await session.scalars(
+                select(TaskPlacement).where(
+                    TaskPlacement.column_id == mine_column.id,
+                    TaskPlacement.user_id == actor.user_id,
+                    TaskPlacement.task_id != task_id,
+                )
+            )
+            # Cards first on a tie: they get numbered by the project routes too.
+            siblings: list[Task | TaskPlacement] = sorted(
+                [*own, *others], key=lambda e: (e.position, isinstance(e, TaskPlacement))
+            )
+            place(siblings, item, position)
 
     # --- columns (managers) --------------------------------------------------
     async def create_column(self, actor: Actor, project_id: int, name: str) -> BoardColumn:

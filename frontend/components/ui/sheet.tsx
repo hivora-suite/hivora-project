@@ -86,7 +86,7 @@ export function SheetContent({
   };
   return (
     <D.Portal>
-      <D.Overlay className="animate-overlay fixed inset-0 z-40 bg-black/30" />
+      <D.Overlay className="animate-overlay fixed inset-0 z-50 bg-black/30" />
       <D.Content
         aria-describedby={undefined}
         className={cn(

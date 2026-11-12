@@ -30,6 +30,24 @@ class TaskAssignee(Base):
     )
 
 
+class TaskPlacement(Base):
+    """Where an account files a shared project's card in its own My kanban columns.
+    The card stays where it is in its project; deleting the column unfiles it."""
+
+    __tablename__ = "task_placement"
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("user.id", ondelete="CASCADE"), primary_key=True
+    )
+    task_id: Mapped[int] = mapped_column(
+        ForeignKey("task.id", ondelete="CASCADE"), primary_key=True, index=True
+    )
+    column_id: Mapped[int] = mapped_column(
+        ForeignKey("board_column.id", ondelete="CASCADE"), index=True
+    )
+    position: Mapped[int]
+
+
 class ChecklistItem(Base):
     __tablename__ = "checklist_item"
 

@@ -18,7 +18,7 @@ import {
   type TaskComment,
   type TaskEvent,
   type CalendarEvent,
-  type MyTask,
+  type MyBoard,
   type User,
 } from "./client";
 
@@ -141,7 +141,7 @@ export const projectApi = {
 };
 
 export const useBoard = (id: number) =>
-  useQuery({ queryKey: [...keys.projects, id, "board"], queryFn: () => api<Board>(`/projects/${id}/board`) });
+  useQuery({ queryKey: [...keys.projects, id, "board"], queryFn: () => api<Board>(`/projects/${id}/board`), enabled: id > 0 });
 
 export const boardApi = {
   createColumn: ({ id, name }: { id: number; name: string }) =>
@@ -169,8 +169,12 @@ export const boardApi = {
 export const useEvents = (id: number) =>
   useQuery({ queryKey: [...keys.projects, id, "events"], queryFn: () => api<CalendarEvent[]>(`/projects/${id}/events`) });
 
-/** The dated cards assigned to me in all my projects; under `projects`, so card changes refresh it. */
-export const useMyTasks = () => useQuery({ queryKey: [...keys.projects, "mine"], queryFn: () => api<MyTask[]>("/me/tasks") });
+/** My cards in every shared project, with their columns; under `projects`, so card changes refresh it. */
+export const useMyBoard = () => useQuery({ queryKey: [...keys.projects, "mine", "board"], queryFn: () => api<MyBoard>("/me/board") });
+
+/** My personal project (My kanban's own board), created on first use with columns in `lang`. */
+export const useMyProject = (lang: string) =>
+  useQuery({ queryKey: [...keys.projects, "mine", "project"], queryFn: () => api<Project>("/me/project", { query: { language: lang } }) });
 
 /** My personal events: no project, only I see them. */
 export const useMyEvents = () => useQuery({ queryKey: [...keys.projects, "mine", "events"], queryFn: () => api<CalendarEvent[]>("/me/events") });
@@ -222,5 +226,45 @@ export function useMoveTask(id: number) {
       qc.setQueryData<Board>(key, (board) => board && { ...board, tasks: moved(board.tasks, v) });
     },
     onSettled: () => qc.invalidateQueries({ queryKey: key }),
+  });
+}
+
+type MyMove = { taskId: number; column_id: number | null; position: number };
+
+/** A move on My kanban (`personal` is my personal project): my cards move for real, project cards
+ *  only in my own order. Both kinds share one order per column, applied at once on screen. */
+export function useMoveMine(personal: number) {
+  const qc = useQueryClient();
+  const boardKey = [...keys.projects, personal, "board"];
+  const mineKey = [...keys.projects, "mine", "board"];
+  return useMutation({
+    mutationFn: ({ taskId, column_id, position }: MyMove) => api<void>("/me/board/move", { method: "POST", body: { task_id: taskId, column_id, position } }),
+    onMutate: async ({ taskId, column_id, position }) => {
+      await Promise.all([qc.cancelQueries({ queryKey: boardKey }), qc.cancelQueries({ queryKey: mineKey })]);
+      const own = qc.getQueryData<Board>(boardKey);
+      const mine = qc.getQueryData<MyBoard>(mineKey);
+      if (!own || !mine) return;
+      // The target column's order, without the moving card, then with it at `position`.
+      const order = [
+        ...own.tasks.filter((t) => t.column_id === column_id && t.id !== taskId).map((t) => ({ id: t.id, at: t.position, filed: false })),
+        ...mine.tasks.filter((t) => t.personal_column_id === column_id && column_id !== null && t.id !== taskId).map((t) => ({ id: t.id, at: t.personal_position ?? 0, filed: true })),
+      ].sort((a, b) => a.at - b.at || Number(a.filed) - Number(b.filed));
+      const filed = mine.tasks.some((t) => t.id === taskId);
+      order.splice(position, 0, { id: taskId, at: 0, filed });
+      const rank = new Map(order.map((o, i) => [o.id, i]));
+      qc.setQueryData<Board>(boardKey, {
+        ...own,
+        tasks: own.tasks
+          .map((t) => (t.id === taskId && column_id !== null ? { ...t, column_id } : t))
+          .map((t) => (rank.has(t.id) ? { ...t, position: rank.get(t.id)! } : t)),
+      });
+      qc.setQueryData<MyBoard>(mineKey, {
+        ...mine,
+        tasks: mine.tasks.map((t) =>
+          t.id === taskId ? { ...t, personal_column_id: column_id, personal_position: column_id === null ? null : rank.get(t.id)! } : rank.has(t.id) ? { ...t, personal_position: rank.get(t.id)! } : t,
+        ),
+      });
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: keys.projects }),
   });
 }

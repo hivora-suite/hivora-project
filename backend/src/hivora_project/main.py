@@ -13,6 +13,7 @@ from hivora_project.member.api import router as auth_router
 from hivora_project.member.users_api import router as users_router
 from hivora_project.planning.api import me_router as my_events_router
 from hivora_project.planning.api import router as events_router
+from hivora_project.project.api import me_router as my_project_router
 from hivora_project.project.api import router as projects_router
 from hivora_project.runtime import Runtime
 from hivora_project.task.api import me_router
@@ -76,6 +77,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(events_router, prefix=f"{API_PREFIX}/projects")
     app.include_router(me_router, prefix=f"{API_PREFIX}/me")
     app.include_router(my_events_router, prefix=f"{API_PREFIX}/me")
+    app.include_router(my_project_router, prefix=f"{API_PREFIX}/me")
 
     @app.get(f"{API_PREFIX}/system/health")
     async def health() -> Health:

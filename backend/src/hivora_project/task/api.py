@@ -6,6 +6,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter
 from pydantic import BaseModel, Field, StringConstraints
 
+from hivora_project.member.models import ProjectRole
 from hivora_project.project.api import Description, actor
 from hivora_project.task.models import BoardColumn, Task
 from hivora_project.web.deps import Member, RuntimeDep
@@ -131,17 +132,51 @@ def task_out(t: Task) -> TaskOut:
     )
 
 
+class MyProjectOut(BaseModel):
+    id: int
+    name: str
+    role: ProjectRole
+
+
 class MyTaskOut(TaskOut):
     project_id: int
-    project_name: str
+    personal_column_id: int | None = Field(description="My kanban column it is filed in")
+    personal_position: int | None
 
 
-@me_router.get("/tasks")
-async def my_tasks(principal: Member, rt: RuntimeDep) -> list[MyTaskOut]:
-    return [
-        MyTaskOut(**task_out(t).model_dump(), project_id=p.id, project_name=p.name)
-        for t, p in await rt.tasks.my_tasks(actor(principal))
-    ]
+class MyMoveIn(BaseModel):
+    task_id: int
+    column_id: int | None = Field(description="A column of mine; null: back to project tasks")
+    position: Position
+
+
+class MyBoardOut(BaseModel):
+    projects: list[MyProjectOut]
+    tasks: list[MyTaskOut]
+
+
+@me_router.get("/board")
+async def my_board(principal: Member, rt: RuntimeDep) -> MyBoardOut:
+    """My cards in every shared project (not my personal one), with my role in each."""
+    found = await rt.tasks.my_board(actor(principal))
+    return MyBoardOut(
+        projects=[MyProjectOut(id=p.id, name=p.name, role=role) for p, role in found.projects],
+        tasks=[
+            MyTaskOut(
+                **task_out(t).model_dump(),
+                project_id=t.project_id,
+                personal_column_id=c,
+                personal_position=pos,
+            )
+            for t, c, pos in found.tasks
+        ],
+    )
+
+
+@me_router.post("/board/move", status_code=204)
+async def move_mine(body: MyMoveIn, principal: Member, rt: RuntimeDep) -> None:
+    """Moves a card on My kanban: mine for real, a project card only in my own order."""
+    await rt.tasks.move_mine(actor(principal), body.task_id, body.column_id, body.position)
 
 
 @router.get("/{project_id}/board")

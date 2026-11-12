@@ -37,7 +37,7 @@ test("the admin signs in, replaces the initial password, creates an account, sig
   await page.getByRole("button", { name: "Ajouter", exact: true }).click();
   await expect(page.getByRole("cell", { name: "camille", exact: true })).toBeVisible();
 
-  await page.getByRole("link", { name: "Tableau" }).click();
+  await page.getByRole("link", { name: "Kanban", exact: true }).click();
   // Columns are named in the app's own dialog, also when opened from a menu.
   await page.getByRole("button", { name: "Ajouter une colonne" }).click();
   await page.getByRole("dialog").getByLabel("Nom de la colonne").fill("Recette");
@@ -106,6 +106,15 @@ test("the admin signs in, replaces the initial password, creates an account, sig
   await page.getByRole("button", { name: "Fermer" }).click();
   await expect(card).toContainText("1/1");
 
+  // Grabbing the empty space under the columns scrolls them sideways.
+  const lane = page.locator(".lane-scroll");
+  const laneBox = (await lane.boundingBox())!;
+  await page.mouse.move(laneBox.x + laneBox.width - 40, laneBox.y + laneBox.height - 6);
+  await page.mouse.down();
+  await page.mouse.move(laneBox.x + laneBox.width - 240, laneBox.y + laneBox.height - 6, { steps: 5 });
+  await page.mouse.up();
+  expect(await lane.evaluate((el) => el.scrollLeft)).toBeGreaterThan(50);
+  await lane.evaluate((el) => (el.scrollLeft = 0));
   const todo = page.getByRole("region", { name: "À faire" });
   const doing = page.getByRole("region", { name: "En cours" });
   await card.dragTo(doing);
@@ -181,6 +190,30 @@ test("the admin signs in, replaces the initial password, creates an account, sig
   await page.getByRole("button", { name: "Année" }).click();
   await expect(page.locator("h2[aria-live]")).toHaveText("2030");
   await page.getByRole("button", { name: "Mois" }).click();
+
+  // My kanban: my project cards in a first fixed column, then my own private columns.
+  await page.getByRole("link", { name: "Mon kanban" }).click();
+  await expect(page.getByRole("region", { name: "Tâches projets" }).locator("[data-task]", { hasText: "Rédiger le brief client" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Tâches projets" })).toContainText("Site vitrine");
+  await page.getByLabel("Ajouter une tâche dans Tâches perso").fill("Lire le contrat");
+  await page.getByLabel("Ajouter une tâche dans Tâches perso").press("Enter");
+  await expect(page.getByRole("region", { name: "Tâches perso" }).locator("[data-task]", { hasText: "Lire le contrat" })).toBeVisible();
+  // A project card filed in my own columns, then back; its project column does not change.
+  const brief = (region: string) => page.getByRole("region", { name: region }).locator("[data-task]", { hasText: "Rédiger le brief client" });
+  // Dropped above one of my cards: one order for both kinds.
+  await page.getByLabel("Ajouter une tâche dans En cours").fill("Appeler le comptable");
+  await page.getByLabel("Ajouter une tâche dans En cours").press("Enter");
+  const doingCards = page.getByRole("region", { name: "En cours" }).locator("[data-task]");
+  await brief("Tâches projets").dragTo(doingCards.filter({ hasText: "Appeler le comptable" }), { targetPosition: { x: 40, y: 4 } });
+  await expect(doingCards.first()).toContainText("Rédiger le brief client");
+  await expect(doingCards.nth(1)).toContainText("Appeler le comptable");
+  await expect(brief("Tâches projets")).toHaveCount(0);
+  // Back with the keyboard: Alt + ← column by column, left of the first is back among the project tasks.
+  await brief("En cours").getByRole("button", { name: "Ouvrir Rédiger le brief client" }).press("Alt+ArrowLeft");
+  await expect(brief("Tâches perso")).toBeVisible();
+  await brief("Tâches perso").getByRole("button", { name: "Ouvrir Rédiger le brief client" }).press("Alt+ArrowLeft");
+  await expect(brief("Tâches projets")).toBeVisible();
+  await page.getByRole("navigation").getByRole("link", { name: "Site vitrine" }).click();
   // The open project is pinned or unpinned from its title in the side menu.
   const pinOpen = page.getByRole("navigation").getByRole("button", { name: "Épingler Site vitrine dans le menu" });
   await pinOpen.click();

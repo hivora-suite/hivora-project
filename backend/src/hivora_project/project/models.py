@@ -17,6 +17,10 @@ class Project(Base):
     created_by: Mapped[int | None] = mapped_column(ForeignKey("user.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(UTCDateTime)
     archived_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    # Set on an account's personal project (My kanban): only that account opens it, admins included.
+    owner_id: Mapped[int | None] = mapped_column(
+        ForeignKey("user.id", ondelete="CASCADE"), unique=True
+    )
 
 
 class ProjectPin(Base):

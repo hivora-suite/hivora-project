@@ -17,7 +17,7 @@ export type BoardTask = Schemas["TaskOut"];
 export type TaskComment = Schemas["CommentOut"];
 export type TaskEvent = Schemas["TaskEventOut"];
 export type CalendarEvent = Schemas["EventOut"];
-export type MyTask = Schemas["MyTaskOut"];
+export type MyBoard = Schemas["MyBoardOut"];
 
 /** Error returned by the backend: `code` is stable and translated by the UI. */
 export class ApiError extends Error {

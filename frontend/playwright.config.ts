@@ -5,6 +5,7 @@ const PORT = 18600;
 // The real backend serving the exported UI; `make e2e` provides the command.
 export default defineConfig({
   testDir: "e2e",
+  timeout: 90_000, // one long journey through the whole app
   workers: 1,
   reporter: "line",
   use: { baseURL: `http://127.0.0.1:${PORT}`, locale: "fr-FR", trace: "retain-on-failure" },
