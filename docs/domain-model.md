@@ -25,8 +25,8 @@ Modèle conceptuel. Le schéma réel vit dans les migrations Alembic, à partir 
 | `project_pin` | projet, utilisateur : projets épinglés dans le menu du compte |
 | `task_placement` | compte, carte d'un projet, colonne perso, position : mon classement dans Mon kanban, sans toucher la carte |
 | `calendar_event` | projet ou propriétaire (événement personnel, privé), titre, dates et heures (`HH:MM`, vides : journée entière) de début et de fin, couleur d'étiquette, note, auteur : élément daté du calendrier, hors Kanban |
-| `board_column` | identifiant, projet, nom, position |
-| `task` | identifiant, projet, colonne, titre, description, position, début, échéance, étiquettes, créateur, création, mise à jour |
+| `board_column` | identifiant, projet, nom, position, Terminé (une par kanban : y être = validée) |
+| `task` | identifiant, projet, colonne, titre, description, position, début, échéance, étiquettes, créateur, création, mise à jour, validée |
 | `task_assignee` | tâche, utilisateur |
 | `checklist_item` | identifiant, tâche, titre, fait, position |
 | `task_event` | identifiant, tâche, utilisateur, action, détail, date |

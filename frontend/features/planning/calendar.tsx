@@ -19,7 +19,7 @@ function taskItem(task: BoardTask, today: string, open: () => void, hint?: strin
   const from = task.start_date ?? task.due_date;
   const to = task.due_date ?? task.start_date;
   if (!from || !to) return null;
-  return { key: `t${task.id}`, title: task.title, from, to, hint, label: task.labels[0], late: !!task.due_date && task.due_date < today, open };
+  return { key: `t${task.id}`, title: task.title, from, to, hint, color: task.labels[0], late: !!task.due_date && task.due_date < today, done: task.done, open };
 }
 
 const isItem = (i: Item | null): i is Item => !!i;

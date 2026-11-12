@@ -121,10 +121,14 @@ export function useCreateProject() {
   });
 }
 
+/** Card moves and status changes go one at a time, in order: two quick moves sent together
+ *  could otherwise reach the server swapped and leave the card where it was first sent. */
+export const CARD_QUEUE = { id: "cards" };
+
 /** Any change to a project: everything shown about projects is read again. */
-export function useProjectMutation<V>(fn: (v: V) => Promise<unknown>) {
+export function useProjectMutation<V>(fn: (v: V) => Promise<unknown>, scope?: { id: string }) {
   const qc = useQueryClient();
-  return useMutation({ mutationFn: fn, onSuccess: () => qc.invalidateQueries({ queryKey: keys.projects }) });
+  return useMutation({ mutationFn: fn, scope, onSuccess: () => qc.invalidateQueries({ queryKey: keys.projects }) });
 }
 
 export const projectApi = {
@@ -146,7 +150,7 @@ export const useBoard = (id: number) =>
 export const boardApi = {
   createColumn: ({ id, name }: { id: number; name: string }) =>
     api<unknown>(`/projects/${id}/columns`, { method: "POST", body: { name } }),
-  updateColumn: ({ id, columnId, ...b }: { id: number; columnId: number; name?: string; position?: number }) =>
+  updateColumn: ({ id, columnId, ...b }: { id: number; columnId: number; name?: string; position?: number; done?: boolean }) =>
     api<unknown>(`/projects/${id}/columns/${columnId}`, { method: "PATCH", body: b }),
   deleteColumn: ({ id, columnId }: { id: number; columnId: number }) =>
     api<void>(`/projects/${id}/columns/${columnId}`, { method: "DELETE" }),
@@ -162,6 +166,9 @@ export const boardApi = {
     api<void>(`/projects/${id}/checklist/${itemId}`, { method: "PATCH", body: b }),
   deleteItem: ({ id, itemId }: { id: number; itemId: number }) =>
     api<void>(`/projects/${id}/checklist/${itemId}`, { method: "DELETE" }),
+  /** Validates a card or not: a status, the card does not move. */
+  setDone: ({ id, taskId, done }: { id: number; taskId: number; done: boolean }) =>
+    api<void>(`/projects/${id}/tasks/${taskId}/complete`, { method: done ? "POST" : "DELETE" }),
   deleteTask: ({ id, taskId }: { id: number; taskId: number }) =>
     api<void>(`/projects/${id}/tasks/${taskId}`, { method: "DELETE" }),
 };
@@ -221,11 +228,13 @@ export function useMoveTask(id: number) {
   const key = [...keys.projects, id, "board"];
   return useMutation({
     mutationFn: (v: Move) => boardApi.moveTask({ id, ...v }),
+    scope: CARD_QUEUE,
     onMutate: async (v) => {
       await qc.cancelQueries({ queryKey: key });
       qc.setQueryData<Board>(key, (board) => board && { ...board, tasks: moved(board.tasks, v) });
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: key }),
+    // Everything about projects: a card put in or out of Done moves in My kanban too.
+    onSettled: () => qc.invalidateQueries({ queryKey: keys.projects }),
   });
 }
 
@@ -239,6 +248,7 @@ export function useMoveMine(personal: number) {
   const mineKey = [...keys.projects, "mine", "board"];
   return useMutation({
     mutationFn: ({ taskId, column_id, position }: MyMove) => api<void>("/me/board/move", { method: "POST", body: { task_id: taskId, column_id, position } }),
+    scope: CARD_QUEUE,
     onMutate: async ({ taskId, column_id, position }) => {
       await Promise.all([qc.cancelQueries({ queryKey: boardKey }), qc.cancelQueries({ queryKey: mineKey })]);
       const own = qc.getQueryData<Board>(boardKey);

@@ -37,6 +37,7 @@ class ColumnOut(BaseModel):
     id: int
     name: str
     position: int
+    done: bool = Field(description="The board's Done column: a card in it is validated")
 
 
 class ChecklistItemOut(BaseModel):
@@ -54,6 +55,7 @@ class TaskOut(BaseModel):
     start_date: date | None
     due_date: date | None
     labels: list[LabelColor]
+    done: bool = Field(description="Validated")
     assignee_ids: list[int]
     checklist: list[ChecklistItemOut]
 
@@ -80,6 +82,7 @@ class ColumnCreateIn(BaseModel):
 class ColumnUpdateIn(BaseModel):
     name: ColumnName | None = None
     position: Position | None = None
+    done: bool | None = None
 
 
 class TaskCreateIn(BaseModel):
@@ -114,7 +117,7 @@ class ItemUpdateIn(BaseModel):
 
 
 def column_out(c: BoardColumn) -> ColumnOut:
-    return ColumnOut(id=c.id, name=c.name, position=c.position)
+    return ColumnOut(id=c.id, name=c.name, position=c.position, done=c.done)
 
 
 def task_out(t: Task) -> TaskOut:
@@ -127,6 +130,7 @@ def task_out(t: Task) -> TaskOut:
         start_date=t.start_date,
         due_date=t.due_date,
         labels=t.labels,  # type: ignore[arg-type]
+        done=t.done,
         assignee_ids=[a.user_id for a in t.assignees],
         checklist=[ChecklistItemOut(id=i.id, title=i.title, done=i.done) for i in t.checklist],
     )
@@ -199,7 +203,12 @@ async def update_column(
     project_id: int, column_id: int, body: ColumnUpdateIn, principal: Member, rt: RuntimeDep
 ) -> ColumnOut:
     column = await rt.tasks.update_column(
-        actor(principal), project_id, column_id, name=body.name, position=body.position
+        actor(principal),
+        project_id,
+        column_id,
+        name=body.name,
+        position=body.position,
+        done=body.done,
     )
     return column_out(column)
 
@@ -233,6 +242,18 @@ async def move_task(
         actor(principal), project_id, task_id, body.column_id, body.position
     )
     return task_out(task)
+
+
+@router.post("/{project_id}/tasks/{task_id}/complete", status_code=204)
+async def complete_task(project_id: int, task_id: int, principal: Member, rt: RuntimeDep) -> None:
+    """Validates a card: a status, the card does not move."""
+    await rt.tasks.set_done(actor(principal), project_id, task_id, True)
+
+
+@router.delete("/{project_id}/tasks/{task_id}/complete", status_code=204)
+async def reopen_task(project_id: int, task_id: int, principal: Member, rt: RuntimeDep) -> None:
+    """No longer validated; the card does not move."""
+    await rt.tasks.set_done(actor(principal), project_id, task_id, False)
 
 
 @router.delete("/{project_id}/tasks/{task_id}", status_code=204)

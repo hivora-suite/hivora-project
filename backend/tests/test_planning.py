@@ -1,5 +1,10 @@
+import pytest
+from alembic import command
 from fastapi.testclient import TestClient
 
+from hivora_project.core.config import Settings
+from hivora_project.core.db import migrate
+from tests.conftest import POSTGRES
 from tests.test_member import error
 from tests.test_projects import P, setup_project, sign_in
 from tests.test_tasks import new_task
@@ -176,3 +181,84 @@ def test_my_kanban_orders_my_cards_and_filed_project_cards_together(client: Test
 def board_column(client: TestClient, project_id: int, task: int) -> object:
     tasks = client.get(f"{P}/{project_id}/board").json()["tasks"]
     return next(t["column_id"] for t in tasks if t["id"] == task)
+
+
+def test_validating_is_a_status_and_never_moves_my_kanban(client: TestClient) -> None:
+    project_id, alice, bob = setup_project(client)
+    headers = sign_in(client, "alice")
+    # A column after "Terminé": the Done column is still "Terminé", not the last one.
+    client.post(f"{P}/{project_id}/columns", json={"name": "Validation"}, headers=headers)
+    columns = client.get(f"{P}/{project_id}/board").json()["columns"]
+    assert [c["name"] for c in columns if c["done"]] == ["Terminé"]
+    doing, project_done = columns[1]["id"], columns[2]["id"]
+    task, other = (new_task(client, project_id, headers, n) for n in "ab")
+    for t in (task, other):
+        body = {"assignee_ids": [alice]}
+        client.patch(f"{P}/{project_id}/tasks/{t}", json=body, headers=headers)
+    personal = client.get("/api/v1/me/project").json()["id"]
+    first, _, mine_done = (c["id"] for c in client.get(f"{P}/{personal}/board").json()["columns"])
+    route = f"{P}/{project_id}/tasks/{task}"
+
+    def go(t: int, column: int | None) -> None:
+        body = {"task_id": t, "column_id": column, "position": 0}
+        client.post("/api/v1/me/board/move", json=body, headers=headers)
+
+    def mine(t: int) -> object:
+        tasks = client.get("/api/v1/me/board").json()["tasks"]
+        return next((x["personal_column_id"], x["done"]) for x in tasks if x["id"] == t)
+
+    # Validated, then not: a status only, the card moves neither in its project nor in my kanban.
+    client.post(f"{route}/move", json={"column_id": doing, "position": 0}, headers=headers)
+    go(task, first)
+    assert client.post(f"{route}/complete", headers=headers).status_code == 204
+    assert (board_column(client, project_id, task), mine(task)) == (doing, (first, True))
+    assert client.delete(f"{route}/complete", headers=headers).status_code == 204
+    assert (board_column(client, project_id, task), mine(task)) == (doing, (first, False))
+    # Each change of status is in the card's history, with who and when.
+    log = client.get(f"{route}/history").json()
+    assert [(e["action"], e["author"]) for e in log[:2]] == [
+        ("reopened", "alice"),
+        ("completed", "alice"),
+    ]
+    assert all(e["created_at"] for e in log[:2])
+    # Put in or out of the Done column in the project: validated, then not.
+    for column, done in ((project_done, True), (doing, False)):
+        client.post(f"{route}/move", json={"column_id": column, "position": 0}, headers=headers)
+        assert mine(task) == (first, done)
+    # Filed in my Done column by me: validated, and still where it is in its project.
+    go(other, mine_done)
+    assert board_column(client, project_id, other) == columns[0]["id"]
+    assert mine(other) == (mine_done, True)
+
+    # A personal card only changes status.
+    own = new_task(client, personal, headers, "c")
+    client.post(f"{P}/{personal}/tasks/{own}/complete", headers=headers)
+    card = next(t for t in client.get(f"{P}/{personal}/board").json()["tasks"] if t["id"] == own)
+    assert (card["column_id"], card["done"]) == (first, True)
+
+    # Another Done column: one per board.
+    route_column = f"{P}/{project_id}/columns/{columns[3]['id']}"
+    client.patch(route_column, json={"done": True}, headers=headers)
+    columns = client.get(f"{P}/{project_id}/board").json()["columns"]
+    assert [c["name"] for c in columns if c["done"]] == ["Validation"]
+
+    # A viewer cannot validate.
+    client.put(f"{P}/{project_id}/members/{bob}", json={"role": "viewer"}, headers=headers)
+    refused = client.post(f"{route}/complete", headers=sign_in(client, "bob"))
+    assert (refused.status_code, error(refused)) == (403, "insufficient_role")
+
+
+@pytest.mark.skipif(POSTGRES is not None, reason="SQLite files")
+def test_recent_migrations_run_on_a_filled_database(client: TestClient, settings: Settings) -> None:
+    """Some SQLite schema changes copy and drop a table: refused once rows point to it."""
+    project_id, alice, _ = setup_project(client)
+    headers = sign_in(client, "alice")
+    task = new_task(client, project_id, headers, "a")
+    client.patch(f"{P}/{project_id}/tasks/{task}", json={"assignee_ids": [alice]}, headers=headers)
+    personal = client.get("/api/v1/me/project").json()["id"]
+    column = client.get(f"{P}/{personal}/board").json()["columns"][0]["id"]
+    body = {"task_id": task, "column_id": column, "position": 0}
+    client.post("/api/v1/me/board/move", json=body, headers=headers)
+    cfg = migrate.alembic_config(settings.db_url)
+    command.downgrade(cfg, "0014")
+    command.upgrade(cfg, "head")

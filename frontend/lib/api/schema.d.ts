@@ -571,6 +571,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{project_id}/tasks/{task_id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Complete Task
+         * @description Validates a card; in a shared project it goes to the Done column.
+         */
+        post: operations["complete_task_api_v1_projects__project_id__tasks__task_id__complete_post"];
+        /**
+         * Reopen Task
+         * @description No longer validated; in a shared project it goes back to the column it came from.
+         */
+        delete: operations["reopen_task_api_v1_projects__project_id__tasks__task_id__complete_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{project_id}/tasks/{task_id}/history": {
         parameters: {
             query?: never;
@@ -786,6 +810,11 @@ export interface components {
         };
         /** ColumnOut */
         ColumnOut: {
+            /**
+             * Done
+             * @description The board's Done column: a card in it is validated
+             */
+            done: boolean;
             /** Id */
             id: number;
             /** Name */
@@ -795,6 +824,8 @@ export interface components {
         };
         /** ColumnUpdateIn */
         ColumnUpdateIn: {
+            /** Done */
+            done?: boolean | null;
             /** Name */
             name?: string | null;
             /** Position */
@@ -1003,6 +1034,11 @@ export interface components {
             column_id: number;
             /** Description */
             description: string;
+            /**
+             * Done
+             * @description Validated
+             */
+            done: boolean;
             /** Due Date */
             due_date: string | null;
             /** Id */
@@ -1175,6 +1211,11 @@ export interface components {
             column_id: number;
             /** Description */
             description: string;
+            /**
+             * Done
+             * @description Validated
+             */
+            done: boolean;
             /** Due Date */
             due_date: string | null;
             /** Id */
@@ -2660,6 +2701,66 @@ export interface operations {
                 "application/json": components["schemas"]["CommentIn"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    complete_task_api_v1_projects__project_id__tasks__task_id__complete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: number;
+                task_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reopen_task_api_v1_projects__project_id__tasks__task_id__complete_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: number;
+                task_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             204: {

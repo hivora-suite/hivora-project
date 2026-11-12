@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreHorizontal, Plus } from "lucide-react";
+import { CircleCheck, MoreHorizontal, Plus } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Fragment, useRef, useState, type DragEvent, type ReactNode } from "react";
 
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import type { BoardColumn, BoardTask, Project, ProjectMember } from "@/lib/api/client";
-import { boardApi, useBoard, useMembers, useMoveTask, useProjectMutation } from "@/lib/api/hooks";
+import { boardApi, CARD_QUEUE, useBoard, useMembers, useMoveTask, useProjectMutation } from "@/lib/api/hooks";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +24,7 @@ import { TaskDialog } from "./task-dialog";
 import { useFlip } from "./use-flip";
 
 /** A card in a column: `hint` names its project when the board mixes several (My kanban). */
-export type Card = { task: BoardTask; hint?: string; members: ProjectMember[]; draggable: boolean };
+export type Card = { task: BoardTask; hint?: string; members: ProjectMember[]; draggable: boolean; toggle?: () => void };
 
 /** The dragging shared by a board's columns: the card held, and where it would land. */
 export type Dnd = {
@@ -41,9 +41,10 @@ export function useDnd(): Dnd {
 }
 
 /** One column: its cards, a drop line where the held card would land, and a large drop area. */
-export function Column({ id, label, cards, dnd, accepts = () => true, onDrop, onOpen, onStep, menu, footer, empty }: {
+export function Column({ id, label, done, cards, dnd, accepts = () => true, onDrop, onOpen, onStep, menu, footer, empty }: {
   id: string;
   label: string;
+  done?: boolean; // the board's Done column
   cards: Card[];
   dnd: Dnd;
   accepts?: (taskId: number) => boolean;
@@ -93,7 +94,8 @@ export function Column({ id, label, cards, dnd, accepts = () => true, onDrop, on
       }}
     >
       <header className="flex min-h-9 items-center justify-between gap-2">
-        <h2 className="min-w-0 break-words text-sm font-semibold">
+        <h2 className="flex min-w-0 items-center gap-1.5 break-words text-sm font-semibold">
+          {done && <CircleCheck aria-hidden className="size-4 shrink-0 text-ok" />}
           {label} <span className="ml-1 font-mono text-xs font-normal text-muted-foreground">{cards.length}</span>
         </h2>
         {menu}
@@ -106,6 +108,7 @@ export function Column({ id, label, cards, dnd, accepts = () => true, onDrop, on
             <TaskCard
               task={c.task}
               hint={c.hint}
+              onToggle={c.toggle}
               members={c.members}
               draggable={c.draggable}
               dragging={c.task.id === dragId}
@@ -154,6 +157,9 @@ export function ProjectColumn({ projectId, column, index, count, canEdit, canMan
         >
           {t("board.renameColumn")}
         </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => change.mutate({ id: projectId, columnId: column.id, done: !column.done })}>
+          {t(column.done ? "board.notDoneColumn" : "board.doneColumn")}
+        </DropdownMenuItem>
         <DropdownMenuItem disabled={index === 0} onSelect={() => change.mutate({ id: projectId, columnId: column.id, position: index - 1 })}>
           {t("board.moveLeft")}
         </DropdownMenuItem>
@@ -183,7 +189,7 @@ export function ProjectColumn({ projectId, column, index, count, canEdit, canMan
       {error && <Alert tone="danger">{errorMessage(error)}</Alert>}
     </>
   );
-  return <Column id={`c${column.id}`} label={column.name} menu={menu || undefined} footer={footer} {...rest} />;
+  return <Column id={`c${column.id}`} label={column.name} done={column.done} menu={menu || undefined} footer={footer} {...rest} />;
 }
 
 /** The "add a column" button at the end of a board. */
@@ -248,10 +254,14 @@ export function Board({ project }: { project: Project }) {
   const [openId, setOpenId] = useState<number | null>(task || null);
   const dnd = useDnd();
   const move = useMoveTask(project.id);
+  const setDone = useProjectMutation(boardApi.setDone, CARD_QUEUE);
   const canEdit = project.role !== "viewer" && !project.archived;
   const canManage = project.role === "manager" && !project.archived;
   const columns = board?.columns ?? [];
   const inColumn = (columnId: number) => board?.tasks.filter((t) => t.column_id === columnId) ?? [];
+  const opened = board?.tasks.find((t) => t.id === openId);
+  // A status only: the card stays where it is.
+  const toggle = (task: BoardTask) => (canEdit ? () => setDone.mutate({ id: project.id, taskId: task.id, done: !task.done }) : undefined);
 
   // The keyboard alternative to dragging: Alt + arrows on a card's button.
   const step = (task: BoardTask, key: string) => {
@@ -266,7 +276,7 @@ export function Board({ project }: { project: Project }) {
 
   return (
     <div className="mb-6 grid gap-3">
-      {(error ?? move.error) && <Alert tone="danger">{errorMessage(error ?? move.error)}</Alert>}
+      {(error ?? move.error ?? setDone.error) && <Alert tone="danger">{errorMessage(error ?? move.error ?? setDone.error)}</Alert>}
       <Lane change={[board, dnd.over]}>
         {columns.map((column, index) => (
           <ProjectColumn
@@ -277,7 +287,7 @@ export function Board({ project }: { project: Project }) {
             count={columns.length}
             canEdit={canEdit}
             canManage={canManage}
-            cards={inColumn(column.id).map((t) => ({ task: t, members, draggable: canEdit }))}
+            cards={inColumn(column.id).map((t) => ({ task: t, members, draggable: canEdit, toggle: toggle(t) }))}
             dnd={dnd}
             onDrop={(taskId, position) => move.mutate({ taskId, column_id: column.id, position })}
             onOpen={setOpenId}
@@ -288,7 +298,8 @@ export function Board({ project }: { project: Project }) {
       </Lane>
       <TaskDialog
         projectId={project.id}
-        task={board?.tasks.find((t) => t.id === openId)}
+        task={opened}
+        onToggle={opened && toggle(opened)}
         members={members}
         canEdit={canEdit}
         canManage={canManage}

@@ -7,7 +7,7 @@ import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 import { addDays, iso, monthDays, parse } from "./dates";
-import { Chip, onDay, type Draft, type Item } from "./items";
+import { barEnds, Chip, MAX_LANES, More, weekBars, type Draft, type Item } from "./items";
 
 const dayAt = (x: number, y: number) => document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-day]")?.dataset.day;
 
@@ -32,6 +32,8 @@ export function MonthView({ anchor, items, onCreate, picked, onPick }: {
   const toggle = (day: string) => onPick(picked.includes(day) ? picked.filter((d) => d !== day) : [...picked, day].sort());
   const today = iso(new Date());
   const days = monthDays(anchor.getFullYear(), anchor.getMonth());
+  // Each week's bars: an item over several days is one bar, drawn from its first day there.
+  const weeks = Array.from({ length: days.length / 7 }, (_, w) => weekBars(items, days.slice(w * 7, w * 7 + 7).map(iso)));
   const [lo, hi] = drag ? [drag.a, drag.b].sort() : ["", ""];
   const finish = () => {
     if (drag?.add) {
@@ -57,8 +59,9 @@ export function MonthView({ anchor, items, onCreate, picked, onPick }: {
             {d.toLocaleDateString(lang, { weekday: "short" })}
           </div>
         ))}
-        {days.map((d) => {
+        {days.map((d, index) => {
           const day = iso(d);
+          const [bars, column] = [weeks[Math.floor(index / 7)], index % 7];
           const label = d.toLocaleDateString(lang, { dateStyle: "full" });
           return (
             <div
@@ -68,7 +71,7 @@ export function MonthView({ anchor, items, onCreate, picked, onPick }: {
               aria-label={picked.includes(day) ? t("planning.pickedDay", { day: label }) : label}
               onPointerDown={(e) => onCreate && e.button === 0 && e.pointerType !== "touch" && setDrag({ a: day, b: day, add: e.ctrlKey || e.metaKey })}
               className={cn(
-                "group flex min-h-24 flex-col gap-1 bg-card p-1.5",
+                "group relative min-h-32 bg-card p-1.5",
                 d.getMonth() !== anchor.getMonth() && "bg-muted/40 text-muted-foreground",
                 onCreate && "cursor-cell",
                 ((drag && lo <= day && day <= hi) || picked.includes(day)) && "bg-primary/15",
@@ -91,9 +94,19 @@ export function MonthView({ anchor, items, onCreate, picked, onPick }: {
                   </button>
                 )}
               </div>
-              {items.filter((item) => onDay(item, day)).map((item) => (
-                <Chip key={item.key} item={item} />
-              ))}
+              {bars
+                .filter((bar) => bar.start === column && bar.lane < MAX_LANES)
+                .map((bar) => (
+                  <Chip
+                    key={bar.item.key}
+                    item={bar.item}
+                    className={cn("absolute z-10 h-[22px]", barEnds(bar))}
+                    style={{ top: 34 + bar.lane * 24, left: 6, width: `calc(${bar.span * 100}% + ${bar.span - 1}px - 12px)` }}
+                  />
+                ))}
+              <div className="absolute bottom-1 left-1.5">
+                <More bars={bars} column={column} date={d} />
+              </div>
             </div>
           );
         })}

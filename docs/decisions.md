@@ -30,8 +30,8 @@ Une ligne par décision. Toutes datées du 09/11/2026.
 | D24 | Détection de secrets : `gitleaks` en CI ; contrôle local à motifs avant commit | Rien à installer sur la VM |
 | D25 | HTTP sur le port 8080 dans le conteneur, HTTPS par un reverse proxy en amont | Pas de gestion de certificats dans l'application |
 | D26 | Accent violet vif, neutres noir et blanc sans teinte, blancs adoucis | Identité propre, distincte du panel |
-| D27 | Aucun paquet GHCR : uniquement des releases sur le dépôt, image construite à l'installation | Choix de l'utilisateur, rien à publier hors du dépôt |
-| D28 | Cookie `Secure` en mode `public` seulement ; en `lan`, accès direct en HTTP | L'application ne gère pas TLS (D25), un cookie `Secure` bloquerait la connexion en HTTP |
+| D27 | Aucun paquet GHCR : uniquement des releases sur le dépôt, image construite à l'installation | Choix de l'utilisateur |
+| D28 | Cookie `Secure` en mode `public` seulement ; en `lan`, accès direct en HTTP | Pas de TLS dans l'application (D25) |
 | D29 | Compte identifié par un nom d'utilisateur, sans e-mail ; codes de secours stockés sur le compte | Reprise du modèle du panel, pas d'envoi d'e-mail en V1 |
 | D30 | Effets d'un contexte sur un autre par rappels fournis à l'assemblage, pas de bus d'événements en V1 | Pas de dépendance inverse, sans mécanisme de plus |
 | D31 | Glisser-déposer natif du navigateur, sans bibliothèque ; alternative clavier Alt + flèches | Aucune dépendance, accessible |
@@ -41,3 +41,4 @@ Une ligne par décision. Toutes datées du 09/11/2026.
 | D35 | 12 couleurs d'étiquettes en tokens `--label-<nom>`, hors couleurs d'état ; pas de couleur libre | Demande |
 | D36 | Planning en V1 : vues jour à année ; événements `calendar_event` (heures `HH:MM` sans fuseau ou journée entière), créés en glissant ; « Mon planning » : mes cartes et mes événements privés | Demande |
 | D37 | Mon kanban : mes cartes des projets, rangées à part (`task_placement`) dans mes colonnes perso ; projet perso caché (`project.owner_id`), à son seul propriétaire | Demande |
+| D38 | Validée : un statut, la carte ne bouge pas ; posée en Terminé, validée | Demande |

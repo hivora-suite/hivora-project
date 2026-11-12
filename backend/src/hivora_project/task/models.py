@@ -17,6 +17,8 @@ class BoardColumn(Base):
     )
     name: Mapped[str] = mapped_column(String(60))
     position: Mapped[int]
+    # The board's "Done" column, one at most: a card in it is validated.
+    done: Mapped[bool] = mapped_column(default=False)
 
 
 class TaskAssignee(Base):
@@ -96,6 +98,8 @@ class Task(Base):
     start_date: Mapped[date | None] = mapped_column(Date)
     due_date: Mapped[date | None] = mapped_column(Date)
     labels: Mapped[list[str]] = mapped_column(JSON, default=list)
+    # Validated: a status, never a move; putting a card in the Done column sets it.
+    done: Mapped[bool] = mapped_column(default=False)
     created_by: Mapped[int | None] = mapped_column(ForeignKey("user.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(UTCDateTime)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime)

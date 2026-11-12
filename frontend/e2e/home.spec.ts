@@ -158,6 +158,21 @@ test("the admin signs in, replaces the initial password, creates an account, sig
   await page.locator("#event-title").fill("Permanence");
   await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(page.getByRole("button", { name: "Permanence" })).toHaveCount(3);
+  // An event over two days is one bar; beyond three rows a day shows "+N", a menu of the others.
+  const addOn = async (day: RegExp, title: string, end?: string) => {
+    await page.getByRole("button", { name: day }).click();
+    await page.locator("#event-title").fill(title);
+    if (end) await page.locator("#event-end").fill(end);
+    await page.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(page.locator("#event-title")).toHaveCount(0);
+  };
+  await addOn(/Ajouter un événement le .*10 juin 2030/, "Séminaire", "2030-06-11");
+  await expect(page.getByRole("button", { name: "Séminaire" })).toHaveCount(1);
+  for (const title of ["Revue 1", "Revue 2", "Revue 3", "Revue 4"]) await addOn(/Ajouter un événement le .*24 juin 2030/, title);
+  await page.getByRole("button", { name: /1 de plus le .*24 juin 2030/ }).click();
+  await page.getByRole("menuitem", { name: /Revue 4/ }).click();
+  await expect(page.locator("#event-title")).toHaveValue("Revue 4");
+  await page.getByRole("button", { name: "Annuler" }).click();
   // My planning: the cards assigned to me, each opening on its board.
   await page.getByRole("link", { name: "Mon planning" }).click();
   await expect(page).toHaveURL(/\/planning\/$/);
@@ -213,7 +228,21 @@ test("the admin signs in, replaces the initial password, creates an account, sig
   await expect(brief("Tâches perso")).toBeVisible();
   await brief("Tâches perso").getByRole("button", { name: "Ouvrir Rédiger le brief client" }).press("Alt+ArrowLeft");
   await expect(brief("Tâches projets")).toBeVisible();
+  // Validated from My kanban: a status, the card moves nowhere.
+  await brief("Tâches projets").getByRole("button", { name: "Valider Rédiger le brief client" }).click();
+  // A status: the card stays where it is in my kanban.
+  await expect(brief("Tâches projets").getByRole("button", { name: "Dévalider Rédiger le brief client" })).toBeVisible();
   await page.getByRole("navigation").getByRole("link", { name: "Site vitrine" }).click();
+  const inTodo = page.getByRole("region", { name: "À faire" }).locator("[data-task]", { hasText: "Rédiger le brief client" });
+  await expect(inTodo.getByRole("button", { name: "Dévalider Rédiger le brief client" })).toBeVisible();
+  await inTodo.getByRole("button", { name: "Dévalider Rédiger le brief client" }).click();
+  await expect(inTodo.getByRole("button", { name: "Valider Rédiger le brief client" })).toBeAttached();
+  // Who validated it and when, in its log.
+  await inTodo.getByRole("button", { name: "Ouvrir Rédiger le brief client" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Log" }).click();
+  await expect(page.getByRole("dialog").getByText("a validé la carte")).toBeVisible();
+  await expect(page.getByRole("dialog").getByText("a dévalidé la carte")).toBeVisible();
+  await page.getByRole("button", { name: "Fermer" }).click();
   // The open project is pinned or unpinned from its title in the side menu.
   const pinOpen = page.getByRole("navigation").getByRole("button", { name: "Épingler Site vitrine dans le menu" });
   await pinOpen.click();

@@ -6,7 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 import { hhmm, iso, minutes } from "./dates";
-import { Chip, onDay, timed, type Draft, type Item } from "./items";
+import { barEnds, Chip, hiddenOn, MAX_LANES, More, onDay, timed, weekBars, type Draft, type Item } from "./items";
 
 const HOUR = 48; // px
 const STEP = 15; // minutes a drag snaps to
@@ -50,6 +50,13 @@ export function TimeView({ days, items, onCreate }: { days: Date[]; items: Item[
     return Math.min(Math.max(Math.floor((((e.clientY - rect.top) / rect.height) * DAY) / STEP) * STEP, 0), DAY - STEP);
   };
   const [lo, hi] = drag ? [Math.min(drag.a, drag.b), Math.max(drag.a, drag.b) + STEP] : [0, 0];
+  // Whole-day items as bars across the days. One day shows them all: it is where "+N" leads.
+  const all = days.length === 1;
+  const band = weekBars(items.filter((item) => !timed(item)), days.map(iso));
+  const bandLanes = Math.max(0, ...band.map((bar) => bar.lane + 1));
+  const hiddenIn = (column: number) => (all ? 0 : hiddenOn(band, column));
+  const rows = all ? bandLanes : Math.min(MAX_LANES, bandLanes);
+  const bandHeight = Math.max(32, rows * 24 + 6 + (days.some((_, c) => hiddenIn(c) > 0) ? 20 : 0));
   const cols = { gridTemplateColumns: `3.5rem repeat(${days.length}, minmax(0, 1fr))` };
 
   return (
@@ -65,13 +72,30 @@ export function TimeView({ days, items, onCreate }: { days: Date[]; items: Item[
         </div>
         <div className="grid border-b" style={cols}>
           <div className="px-1 py-1.5 text-[10px] text-muted-foreground">{t("planning.allDay")}</div>
-          {days.map((d) => (
-            <div key={iso(d)} className="flex min-h-8 flex-col gap-1 border-l p-1">
-              {items.filter((item) => !timed(item) && onDay(item, iso(d))).map((item) => (
-                <Chip key={item.key} item={item} />
+          <div className="relative" style={{ gridColumn: `span ${days.length}`, height: bandHeight }}>
+            <div aria-hidden className="absolute inset-0 grid" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))` }}>
+              {days.map((d) => (
+                <div key={iso(d)} className="border-l" />
               ))}
             </div>
-          ))}
+            {band
+              .filter((bar) => all || bar.lane < MAX_LANES)
+              .map((bar) => (
+                <Chip
+                  key={bar.item.key}
+                  item={bar.item}
+                  className={cn("absolute h-[22px]", barEnds(bar))}
+                  style={{ top: 4 + bar.lane * 24, left: `calc(${(bar.start / days.length) * 100}% + 4px)`, width: `calc(${(bar.span / days.length) * 100}% - 8px)` }}
+                />
+              ))}
+            {days.map((d, column) => {
+              return hiddenIn(column) > 0 ? (
+                <div key={iso(d)} className="absolute bottom-0.5" style={{ left: `calc(${(column / days.length) * 100}% + 4px)` }}>
+                  <More bars={band} column={column} date={d} />
+                </div>
+              ) : null;
+            })}
+          </div>
         </div>
         <div ref={scroller} className="max-h-[640px] overflow-y-auto">
           <div className="grid" style={cols}>

@@ -2,6 +2,7 @@
 
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Protocol
 
 from sqlalchemy import delete, func, select
@@ -10,10 +11,10 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from hivora_project.core.clock import Clock
 from hivora_project.core.errors import ConflictError, NotFoundError, ValidationError
 from hivora_project.member import access
-from hivora_project.member.access import Actor
+from hivora_project.member.access import Actor, InsufficientProjectRoleError
 from hivora_project.member.models import ProjectMember, ProjectRole, Role
 from hivora_project.project.models import Project
-from hivora_project.project.service import open_project
+from hivora_project.project.service import ProjectArchivedError, open_project
 from hivora_project.task import history
 from hivora_project.task.models import (
     BoardColumn,
@@ -28,6 +29,7 @@ DEFAULT_COLUMNS = {
     "fr": ("À faire", "En cours", "Terminé"),
     "en": ("To do", "In progress", "Done"),
 }
+END = 1_000_000_000  # a position after any other
 # A personal project (My kanban) starts with its own inbox column.
 PERSONAL_FIRST_COLUMN = {"fr": "Tâches perso", "en": "Personal tasks"}
 
@@ -80,7 +82,7 @@ async def create_default_columns(
     if personal:
         names = (PERSONAL_FIRST_COLUMN[language], *names[1:])
     session.add_all(
-        BoardColumn(project_id=project_id, name=name, position=index)
+        BoardColumn(project_id=project_id, name=name, position=index, done=index == len(names) - 1)
         for index, name in enumerate(names)
     )
 
@@ -115,6 +117,38 @@ async def _column_tasks(session: AsyncSession, column_id: int) -> list[Task]:
         select(Task).where(Task.column_id == column_id).order_by(Task.position, Task.id)
     )
     return list(rows)
+
+
+async def _relocate(
+    session: AsyncSession, task: Task, column: BoardColumn, user_id: int, now: datetime
+) -> None:
+    """Puts the card in ``column`` (its order is set by the caller), noting a change of column."""
+    if task.column_id != column.id:
+        previous = await _column(session, task.project_id, task.column_id)
+        await history.record(
+            session, task.id, user_id, "moved", now, column.name, old=previous.name, new=column.name
+        )
+    task.column_id, task.updated_at = column.id, now
+
+
+async def _mark(session: AsyncSession, task: Task, done: bool, user_id: int, now: datetime) -> None:
+    """Validates a card or not, noted in its history when that changes it."""
+    if task.done != done:
+        task.done = done
+        await history.record(session, task.id, user_id, "completed" if done else "reopened", now)
+
+
+async def _moved_status(
+    session: AsyncSession,
+    task: Task,
+    before: BoardColumn,
+    after: BoardColumn,
+    user_id: int,
+    now: datetime,
+) -> None:
+    """A card put in the Done column is validated; taken out, it is not."""
+    if after.done != before.done:
+        await _mark(session, task, after.done, user_id, now)
 
 
 async def _task(session: AsyncSession, project_id: int, task_id: int) -> Task:
@@ -224,19 +258,11 @@ class TaskService:
             if project.owner_id == actor.user_id:
                 if mine_column is None:
                     raise ColumnNotFoundError(str(column_id))
-                if task.column_id != mine_column.id:
-                    previous = await _column(session, task.project_id, task.column_id)
-                    await history.record(
-                        session,
-                        task.id,
-                        actor.user_id,
-                        "moved",
-                        self.clock.now(),
-                        mine_column.name,
-                        old=previous.name,
-                        new=mine_column.name,
-                    )
-                task.column_id, task.updated_at = mine_column.id, self.clock.now()
+                before = await _column(session, task.project_id, task.column_id)
+                await _relocate(session, task, mine_column, actor.user_id, self.clock.now())
+                await _moved_status(
+                    session, task, before, mine_column, actor.user_id, self.clock.now()
+                )
                 item = task
             else:
                 assigned = await session.get(TaskAssignee, (task_id, actor.user_id))
@@ -269,6 +295,13 @@ class TaskService:
                 [*own, *others], key=lambda e: (e.position, isinstance(e, TaskPlacement))
             )
             place(siblings, item, position)
+            # A project card I file in my Done column is validated in its project, if I may.
+            if isinstance(item, TaskPlacement) and mine_column.done:
+                try:
+                    await open_project(session, actor, project.id, ProjectRole.CONTRIBUTOR)
+                except (InsufficientProjectRoleError, ProjectArchivedError):
+                    return
+                await _mark(session, task, True, actor.user_id, self.clock.now())
 
     # --- columns (managers) --------------------------------------------------
     async def create_column(self, actor: Actor, project_id: int, name: str) -> BoardColumn:
@@ -290,10 +323,16 @@ class TaskService:
         *,
         name: str | None,
         position: int | None,
+        done: bool | None = None,
     ) -> BoardColumn:
         async with self.sessions() as session, session.begin():
             await open_project(session, actor, project_id, ProjectRole.MANAGER)
             column = await _column(session, project_id, column_id)
+            if done:  # one Done column per board
+                for other in await _columns(session, project_id):
+                    other.done = False
+            if done is not None:
+                column.done = done
             if name is not None:
                 column.name = name
             if position is not None:
@@ -380,22 +419,17 @@ class TaskService:
             await open_project(session, actor, project_id, ProjectRole.CONTRIBUTOR)
             task = await _task(session, project_id, task_id)
             column = await _column(session, project_id, column_id)
-            if task.column_id != column_id:
-                previous = await _column(session, project_id, task.column_id)
-                await history.record(
-                    session,
-                    task.id,
-                    actor.user_id,
-                    "moved",
-                    self.clock.now(),
-                    column.name,
-                    old=previous.name,
-                    new=column.name,
-                )
-            task.column_id = column_id
-            task.updated_at = self.clock.now()
+            before = await _column(session, project_id, task.column_id)
+            await _relocate(session, task, column, actor.user_id, self.clock.now())
             place(await _column_tasks(session, column_id), task, position)
+            await _moved_status(session, task, before, column, actor.user_id, self.clock.now())
             return task
+
+    async def set_done(self, actor: Actor, project_id: int, task_id: int, done: bool) -> None:
+        async with self.sessions() as session, session.begin():
+            await open_project(session, actor, project_id, ProjectRole.CONTRIBUTOR)
+            task = await _task(session, project_id, task_id)
+            await _mark(session, task, done, actor.user_id, self.clock.now())
 
     async def delete_task(self, actor: Actor, project_id: int, task_id: int) -> None:
         async with self.sessions() as session, session.begin():

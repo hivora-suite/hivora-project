@@ -97,6 +97,11 @@
       },
       "ColumnOut": {
         "properties": {
+          "done": {
+            "description": "The board's Done column: a card in it is validated",
+            "title": "Done",
+            "type": "boolean"
+          },
           "id": {
             "title": "Id",
             "type": "integer"
@@ -113,13 +118,25 @@
         "required": [
           "id",
           "name",
-          "position"
+          "position",
+          "done"
         ],
         "title": "ColumnOut",
         "type": "object"
       },
       "ColumnUpdateIn": {
         "properties": {
+          "done": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Done"
+          },
           "name": {
             "anyOf": [
               {
@@ -765,6 +782,11 @@
             "title": "Description",
             "type": "string"
           },
+          "done": {
+            "description": "Validated",
+            "title": "Done",
+            "type": "boolean"
+          },
           "due_date": {
             "anyOf": [
               {
@@ -859,6 +881,7 @@
           "start_date",
           "due_date",
           "labels",
+          "done",
           "assignee_ids",
           "checklist",
           "project_id",
@@ -1226,6 +1249,11 @@
             "title": "Description",
             "type": "string"
           },
+          "done": {
+            "description": "Validated",
+            "title": "Done",
+            "type": "boolean"
+          },
           "due_date": {
             "anyOf": [
               {
@@ -1293,6 +1321,7 @@
           "start_date",
           "due_date",
           "labels",
+          "done",
           "assignee_ids",
           "checklist"
         ],
@@ -3487,6 +3516,94 @@
         "summary": "Add Comment",
         "tags": [
           "comments"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/tasks/{task_id}/complete": {
+      "delete": {
+        "description": "No longer validated; in a shared project it goes back to the column it came from.",
+        "operationId": "reopen_task_api_v1_projects__project_id__tasks__task_id__complete_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reopen Task",
+        "tags": [
+          "board"
+        ]
+      },
+      "post": {
+        "description": "Validates a card; in a shared project it goes to the Done column.",
+        "operationId": "complete_task_api_v1_projects__project_id__tasks__task_id__complete_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Complete Task",
+        "tags": [
+          "board"
         ]
       }
     },

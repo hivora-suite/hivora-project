@@ -8,7 +8,7 @@ Comptes, rôles, projets, Kanban, cartes (dates, checklist, étiquettes, membres
 
 Planning (D36, migrations 0010-0012) : vues jour, semaine, mois, année ; cartes et événements (heures ou journée), créés en glissant ou sur des jours choisis (Ctrl + clic) ; « Mon planning » : mes cartes et événements privés.
 
-Kanban (ex-Tableau). « Mon kanban » (D37, migrations 0013-0014) : mes cartes des projets, rangées dans mes colonnes perso.
+Kanban (ex-Tableau). « Mon kanban » (D37, migrations 0013-0014) : cartes des projets rangées chez moi ; Valider/dévalider (D38, 0015-0016).
 
 Projets épinglés dans le menu (migration 0009), suppression d'un projet, 12 couleurs d'étiquettes (D35), confirmations intégrées.
 

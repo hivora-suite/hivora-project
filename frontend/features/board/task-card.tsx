@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, CheckSquare, Maximize2 } from "lucide-react";
+import { Calendar, Check, CheckSquare, CircleCheck, Maximize2 } from "lucide-react";
 
 import type { BoardTask, ProjectMember } from "@/lib/api/client";
 import { useI18n } from "@/lib/i18n";
@@ -10,9 +10,10 @@ import { LABELS } from "./labels";
 
 const today = () => new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD, local time
 
-export function TaskCard({ task, hint, members, draggable, dragging, onOpen, onStep, onDragStart, onDragEnd }: {
+export function TaskCard({ task, hint, onToggle, members, draggable, dragging, onOpen, onStep, onDragStart, onDragEnd }: {
   task: BoardTask;
   hint?: string; // its project, when cards of several projects mix (My kanban)
+  onToggle?: () => void; // validates it, or not; absent when not allowed
   members: ProjectMember[];
   draggable: boolean;
   dragging: boolean;
@@ -36,7 +37,7 @@ export function TaskCard({ task, hint, members, draggable, dragging, onOpen, onS
       onDragEnd={onDragEnd}
       onClick={onOpen}
       className={cn(
-        "grid cursor-pointer gap-2 rounded-md border bg-card p-2.5 text-sm shadow-sm transition-[border-color,box-shadow,opacity] duration-200 hover:border-primary hover:shadow-md",
+        "group grid cursor-pointer gap-2 rounded-md border bg-card p-2.5 text-sm shadow-sm transition-[border-color,box-shadow,opacity] duration-200 hover:border-primary hover:shadow-md",
         dragging && "opacity-40",
       )}
     >
@@ -49,7 +50,26 @@ export function TaskCard({ task, hint, members, draggable, dragging, onOpen, onS
         </div>
       )}
       <div className="flex items-start justify-between gap-2">
-        <span className="min-w-0 break-words font-medium">{task.title}</span>
+        <span className={cn("min-w-0 flex-1 break-words font-medium", task.done && "text-muted-foreground line-through decoration-1")}>{task.title}</span>
+        {onToggle || task.done ? (
+          <button
+            type="button"
+            disabled={!onToggle}
+            aria-label={t(task.done ? "board.reopen" : "board.complete", { name: task.title })}
+            title={t(task.done ? "board.reopen" : "board.complete", { name: task.title })}
+            aria-pressed={task.done}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggle?.();
+            }}
+            className={cn(
+              "shrink-0 rounded p-0.5 transition-[opacity,color,background-color] enabled:hover:bg-muted",
+              task.done ? "text-ok" : "text-muted-foreground opacity-0 hover:text-ok focus-visible:opacity-100 group-hover:opacity-100",
+            )}
+          >
+            {task.done ? <CircleCheck className="size-4" /> : <Check className="size-3.5" />}
+          </button>
+        ) : null}
         {/* Its click reaches the card, which opens: one behaviour, and a keyboard target. */}
         <button
           type="button"

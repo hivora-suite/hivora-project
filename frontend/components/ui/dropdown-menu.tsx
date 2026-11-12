@@ -65,21 +65,22 @@ export function DropdownMenuTrigger({ asChild, ...props }: ComponentProps<"butto
   return <Comp aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)} {...props} />;
 }
 
-export function DropdownMenuContent({ className, style, ...props }: ComponentProps<"div">) {
+/** `align="start"`: left edges aligned, the menu opening rightwards (a trigger near the left). */
+export function DropdownMenuContent({ className, style, align = "end", ...props }: ComponentProps<"div"> & { align?: "start" | "end" }) {
   const { open, root, content } = useMenu();
   const [place, setPlace] = useState<CSSProperties | null>(null);
-  // Under the button, right edges aligned; above it when the menu would leave the screen.
+  // Under the button, right (or left) edges aligned; above it when the menu would leave the screen.
   // Placed again when the page scrolls or resizes: it stays with its button.
   useLayoutEffect(() => {
     if (!open) return setPlace(null);
     const measure = () => {
       if (!root.current) return;
       const button = root.current.getBoundingClientRect();
-      const right = window.innerWidth - button.right;
+      const side = align === "start" ? { left: button.left } : { right: window.innerWidth - button.right };
       const height = content.current?.offsetHeight ?? 0; // drawn hidden first, to be measured
       const below = button.bottom + 4 + height <= window.innerHeight - 8;
       const above = button.top - 4 - height >= 8;
-      setPlace(below || !above ? { top: button.bottom, right } : { bottom: window.innerHeight - button.top, right, marginTop: 0, marginBottom: 4 });
+      setPlace(below || !above ? { top: button.bottom, ...side } : { bottom: window.innerHeight - button.top, ...side, marginTop: 0, marginBottom: 4 });
     };
     measure();
     window.addEventListener("scroll", measure, true);
@@ -88,7 +89,7 @@ export function DropdownMenuContent({ className, style, ...props }: ComponentPro
       window.removeEventListener("scroll", measure, true);
       window.removeEventListener("resize", measure);
     };
-  }, [open, root, content]);
+  }, [open, root, content, align]);
   useEffect(() => {
     // Once placed (visible): a hidden element takes no focus.
     if (open && place) content.current?.querySelector<HTMLElement>("[role=menuitem]:not(:disabled)")?.focus();

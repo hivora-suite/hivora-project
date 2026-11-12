@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Trash2 } from "lucide-react";
+import { Check, CircleCheck, Pencil, Trash2, Undo2 } from "lucide-react";
 import { useState } from "react";
 
 import { useAsk } from "@/components/ask";
@@ -19,8 +19,9 @@ import { SaveState } from "./save-state";
 import { TaskLog } from "./task-log";
 import { TaskOptions } from "./task-options";
 
-export function TaskDialog({ projectId, task, members, canEdit, canManage, onClose }: {
+export function TaskDialog({ projectId, task, onToggle, members, canEdit, canManage, onClose }: {
   projectId: number;
+  onToggle?: () => void; // validates it, or not; absent when not allowed or unknown
   task: BoardTask | undefined;
   members: ProjectMember[];
   canEdit: boolean;
@@ -95,6 +96,16 @@ export function TaskDialog({ projectId, task, members, canEdit, canManage, onClo
                   }}
                 >
                   <Trash2 className="size-3.5" />
+                </Button>
+              )}
+              {task?.done && (
+                <span className="ml-2 flex shrink-0 items-center gap-1 text-sm font-medium text-ok">
+                  <CircleCheck className="size-4" /> {t("board.finished")}
+                </span>
+              )}
+              {task && onToggle && (
+                <Button type="button" variant="outline" size="sm" className="ml-2 shrink-0" onClick={onToggle}>
+                  {task.done ? <Undo2 /> : <Check />} {t(task.done ? "board.reopenTask" : "board.completeTask")}
                 </Button>
               )}
             </span>
