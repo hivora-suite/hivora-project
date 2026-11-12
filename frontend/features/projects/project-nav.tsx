@@ -1,12 +1,12 @@
 "use client";
 
-import { ChevronsDownUp, ChevronsUpDown, Minus, Plus, SlidersHorizontal, SquareKanban, Users } from "lucide-react";
+import { ChevronsDownUp, ChevronsUpDown, Minus, Pin, Plus, SlidersHorizontal, SquareKanban, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { Collapse } from "@/components/ui/collapse";
-import { useProject, useProjects } from "@/lib/api/hooks";
+import { projectApi, useProject, useProjectMutation, useProjects } from "@/lib/api/hooks";
 import { useI18n, type MessageKey } from "@/lib/i18n";
 import { readPref, writePref } from "@/lib/prefs";
 import { cn } from "@/lib/utils";
@@ -28,9 +28,11 @@ export function ProjectNav({ link }: { link: ReactNode }) {
   const pathname = usePathname();
   const urlId = useProjectId();
   const current = pathname.startsWith("/project/") ? urlId : 0;
-  const { data: projects = [] } = useProjects(false);
+  const { data: all = [] } = useProjects(false);
+  const projects = all.filter((p) => p.pinned);
   const { data: opened } = useProject(current);
-  // An archived project is not in the list, but its tabs are needed while it is open.
+  const pin = useProjectMutation(projectApi.pin);
+  // An unpinned or archived project is not in the list, but its tabs are needed while it is open.
   const listed = opened && !projects.some((p) => p.id === opened.id) ? [...projects, opened] : projects;
   const [expanded, setExpanded] = useState<number[]>(() => (readPref("nav.projects") ?? "").split(",").map(Number).filter(Boolean));
   const save = (ids: number[]) => {
@@ -82,6 +84,18 @@ export function ProjectNav({ link }: { link: ReactNode }) {
                 >
                   {p.name}
                 </Link>
+                {p.id === current && (
+                  <button
+                    type="button"
+                    aria-label={t("projects.pin", { name: p.name })}
+                    aria-pressed={p.pinned}
+                    title={t("projects.pin", { name: p.name })}
+                    onClick={() => pin.mutate({ id: p.id, pinned: !p.pinned })}
+                    className={cn(SMALL_BUTTON, "grid size-5 shrink-0 place-items-center rounded hover:bg-muted", p.pinned && "text-primary")}
+                  >
+                    <Pin className={cn("size-3.5", p.pinned && "fill-current")} />
+                  </button>
+                )}
               </div>
               <Collapse open={open}>
                 <div className="ml-2 flex flex-col gap-1">

@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, History, Tag, Users, type LucideIcon } from "lucide-react";
+import { Calendar, History, Tag, Users, X, type LucideIcon } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 import { Alert } from "@/components/ui/alert";
@@ -30,6 +30,31 @@ export function TaskOptions({ projectId, task, members, canEdit, logOpen, onTogg
   const [panel, setPanel] = useState<Panel | null>(null);
   const update = useProjectMutation(boardApi.updateTask);
   const save = (fields: Omit<Parameters<typeof boardApi.updateTask>[0], "id" | "taskId">) => update.mutate({ id: projectId, taskId: task.id, ...fields });
+  const saveMembers = (form: HTMLFormElement) => save({ assignee_ids: new FormData(form).getAll("assignee").map(Number) });
+  const saveLabels = (form: HTMLFormElement) => save({ labels: new FormData(form).getAll("label").map(String) as LabelName[] });
+  const saveDates = (form: HTMLFormElement) => {
+    const f = new FormData(form);
+    save({ start_date: String(f.get("start")) || null, due_date: String(f.get("due")) || null });
+  };
+  /** Empties the form's inputs (or only `name`), then saves it. */
+  const clear = (label: string, saveForm: (form: HTMLFormElement) => void, name?: string) => (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      aria-label={label}
+      onClick={(e) => {
+        const form = e.currentTarget.form!;
+        for (const el of form.querySelectorAll<HTMLInputElement>(name ? `input[name="${name}"]` : "input")) {
+          if (el.type === "checkbox") el.checked = false;
+          else el.value = "";
+        }
+        saveForm(form);
+      }}
+    >
+      <X />
+    </Button>
+  );
   const day = (date: string) => new Date(`${date}T00:00`).toLocaleDateString(lang, { day: "numeric", month: "short" });
   const dates = [task.start_date, task.due_date].filter((d): d is string => !!d).map(day).join(" → ");
 
@@ -55,18 +80,21 @@ export function TaskOptions({ projectId, task, members, canEdit, logOpen, onTogg
       <fieldset disabled={!canEdit}>
         {/* Kept mounted when folded: each form holds the state of its inputs. */}
         <Collapse open={panel === "members"}>
-          <form className="grid gap-1.5 rounded-md border p-3" onChange={(e) => save({ assignee_ids: new FormData(e.currentTarget).getAll("assignee").map(Number) })}>
+          <form className="flex items-start gap-2 rounded-md border p-3" onChange={(e) => saveMembers(e.currentTarget)}>
+          <div className="grid flex-1 gap-1.5">
           {members.map((m) => (
             <label key={m.user_id} className="flex items-center gap-2 text-sm">
               <input type="checkbox" name="assignee" value={m.user_id} defaultChecked={task.assignee_ids.includes(m.user_id)} className="size-4 accent-primary" />
               {m.username}
             </label>
           ))}
+          </div>
+          {clear(t("board.clearAll"), saveMembers)}
         </form>
         </Collapse>
         <Collapse open={panel === "labels"}>
-          <form className="rounded-md border p-3" onChange={(e) => save({ labels: new FormData(e.currentTarget).getAll("label").map(String) as LabelName[] })}>
-          <div className="flex flex-wrap gap-2">
+          <form className="flex items-start justify-between gap-2 rounded-md border p-3" onChange={(e) => saveLabels(e.currentTarget)}>
+          <div className="grid w-fit grid-cols-6 gap-2">
             {Object.entries(LABELS).map(([name, color]) => (
               <label key={name} className="cursor-pointer">
                 <input type="checkbox" name="label" value={name} defaultChecked={task.labels.includes(name as LabelName)} aria-label={t(`board.label.${name as LabelName}`)} className="peer sr-only" />
@@ -74,24 +102,20 @@ export function TaskOptions({ projectId, task, members, canEdit, logOpen, onTogg
               </label>
             ))}
           </div>
+          {clear(t("board.clearAll"), saveLabels)}
         </form>
         </Collapse>
         <Collapse open={panel === "dates"}>
-        <form
-          className="grid grid-cols-2 gap-3 rounded-md border p-3"
-          onChange={(e) => {
-            const f = new FormData(e.currentTarget);
-            save({ start_date: String(f.get("start")) || null, due_date: String(f.get("due")) || null });
-          }}
-        >
-          <div className="grid gap-1.5">
-            <Label htmlFor="task-start">{t("board.start")}</Label>
-            <Input id="task-start" name="start" type="date" defaultValue={task.start_date ?? ""} />
-          </div>
-          <div className="grid gap-1.5">
-            <Label htmlFor="task-due">{t("board.due")}</Label>
-            <Input id="task-due" name="due" type="date" defaultValue={task.due_date ?? ""} />
-          </div>
+        <form className="grid grid-cols-2 gap-3 rounded-md border p-3" onChange={(e) => saveDates(e.currentTarget)}>
+          {(["start", "due"] as const).map((name) => (
+            <div key={name} className="grid gap-1.5">
+              <Label htmlFor={`task-${name}`}>{t(`board.${name}`)}</Label>
+              <div className="flex gap-1">
+                <Input id={`task-${name}`} name={name} type="date" defaultValue={task[name === "start" ? "start_date" : "due_date"] ?? ""} />
+                {clear(t("board.clearDate"), saveDates, name)}
+              </div>
+            </div>
+          ))}
         </form>
         </Collapse>
       </fieldset>

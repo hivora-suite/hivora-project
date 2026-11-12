@@ -1,9 +1,9 @@
 """Projects, and the membership actions a project allows; membership lives in `member.access`."""
 
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from hivora_project.core.clock import Clock
@@ -11,7 +11,7 @@ from hivora_project.core.errors import ConflictError
 from hivora_project.member import access
 from hivora_project.member.access import Actor, MemberInfo, ProjectNotFoundError
 from hivora_project.member.models import ProjectMember, ProjectRole, Role, User
-from hivora_project.project.models import Project
+from hivora_project.project.models import Project, ProjectPin
 
 
 class ProjectArchivedError(ConflictError):
@@ -22,6 +22,7 @@ class ProjectArchivedError(ConflictError):
 class ProjectView:
     project: Project
     role: ProjectRole
+    pinned: bool = False
 
 
 async def open_project(
@@ -42,6 +43,11 @@ async def open_project(
     return ProjectView(project, role)
 
 
+async def with_pin(session: AsyncSession, actor: Actor, view: ProjectView) -> ProjectView:
+    pin = await session.get(ProjectPin, (view.project.id, actor.user_id))
+    return replace(view, pinned=pin is not None)
+
+
 class ProjectService:
     def __init__(
         self,
@@ -58,9 +64,17 @@ class ProjectService:
 
     async def list_projects(self, actor: Actor, *, archived: bool) -> list[ProjectView]:
         async with self.sessions() as session:
-            query = select(Project, ProjectMember.role).outerjoin(
-                ProjectMember,
-                (ProjectMember.project_id == Project.id) & (ProjectMember.user_id == actor.user_id),
+            query = (
+                select(Project, ProjectMember.role, ProjectPin.user_id)
+                .outerjoin(
+                    ProjectMember,
+                    (ProjectMember.project_id == Project.id)
+                    & (ProjectMember.user_id == actor.user_id),
+                )
+                .outerjoin(
+                    ProjectPin,
+                    (ProjectPin.project_id == Project.id) & (ProjectPin.user_id == actor.user_id),
+                )
             )
             if actor.role is not Role.ADMIN:
                 query = query.where(ProjectMember.user_id == actor.user_id)
@@ -68,8 +82,12 @@ class ProjectService:
                 query = query.where(Project.archived_at.is_(None))
             rows = await session.execute(query.order_by(func.lower(Project.name), Project.id))
             return [
-                ProjectView(project, ProjectRole.MANAGER if actor.role is Role.ADMIN else role)
-                for project, role in rows
+                ProjectView(
+                    project,
+                    ProjectRole.MANAGER if actor.role is Role.ADMIN else role,
+                    pin is not None,
+                )
+                for project, role, pin in rows
             ]
 
     async def create(self, actor: Actor, name: str, description: str, language: str) -> ProjectView:
@@ -83,14 +101,16 @@ class ProjectService:
             session.add(project)
             await session.flush()
             await access.add_creator(session, project.id, actor.user_id)
+            session.add(ProjectPin(project_id=project.id, user_id=actor.user_id))
             await self.on_created(session, project.id, language)
-        return ProjectView(project, ProjectRole.MANAGER)
+        return ProjectView(project, ProjectRole.MANAGER, pinned=True)
 
     async def get(self, actor: Actor, project_id: int) -> ProjectView:
         async with self.sessions() as session:
-            return await open_project(
+            view = await open_project(
                 session, actor, project_id, ProjectRole.VIEWER, writable=False
             )
+            return await with_pin(session, actor, view)
 
     async def update(
         self, actor: Actor, project_id: int, *, name: str | None, description: str | None
@@ -101,7 +121,7 @@ class ProjectService:
                 view.project.name = name
             if description is not None:
                 view.project.description = description
-            return view
+            return await with_pin(session, actor, view)
 
     async def set_archived(self, actor: Actor, project_id: int, *, archived: bool) -> ProjectView:
         async with self.sessions() as session, session.begin():
@@ -109,7 +129,28 @@ class ProjectService:
                 session, actor, project_id, ProjectRole.MANAGER, writable=False
             )
             view.project.archived_at = self.clock.now() if archived else None
-            return view
+            return await with_pin(session, actor, view)
+
+    async def set_pinned(self, actor: Actor, project_id: int, *, pinned: bool) -> None:
+        """Pins or unpins the project in the actor's side menu; repeating it changes nothing."""
+        async with self.sessions() as session, session.begin():
+            await open_project(session, actor, project_id, ProjectRole.VIEWER, writable=False)
+            if not pinned:
+                await session.execute(
+                    delete(ProjectPin).where(
+                        ProjectPin.project_id == project_id, ProjectPin.user_id == actor.user_id
+                    )
+                )
+            elif await session.get(ProjectPin, (project_id, actor.user_id)) is None:
+                session.add(ProjectPin(project_id=project_id, user_id=actor.user_id))
+
+    async def delete(self, actor: Actor, project_id: int) -> None:
+        """Columns, cards, comments, history and members go with it (database cascades)."""
+        async with self.sessions() as session, session.begin():
+            view = await open_project(
+                session, actor, project_id, ProjectRole.MANAGER, writable=False
+            )
+            await session.delete(view.project)
 
     async def members(self, actor: Actor, project_id: int) -> list[MemberInfo]:
         async with self.sessions() as session:

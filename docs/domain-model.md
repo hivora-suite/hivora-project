@@ -22,6 +22,7 @@ Modèle conceptuel. Le schéma réel vit dans les migrations Alembic, à partir 
 | `session` | identifiant, utilisateur, empreinte du jeton, jeton CSRF, création, expiration |
 | `project` | identifiant, nom, description, créateur, création, archivage (réversible) |
 | `project_member` | projet, utilisateur, rôle de projet |
+| `project_pin` | projet, utilisateur : projets épinglés dans le menu du compte |
 | `board_column` | identifiant, projet, nom, position |
 | `task` | identifiant, projet, colonne, titre, description, position, début, échéance, étiquettes, créateur, création, mise à jour |
 | `task_assignee` | tâche, utilisateur |
@@ -42,6 +43,7 @@ Une tâche V1 n'a ni estimation ni dépendance.
 
 - Un projet actif a toujours au moins un `manager`.
 - Un projet archivé est en lecture seule.
+- Supprimer un projet, archivé ou non, efface définitivement ses colonnes, cartes, commentaires, historique et membres.
 - Un nouveau projet reçoit des colonnes par défaut, dans la langue de son créateur.
 
 **Tâches**

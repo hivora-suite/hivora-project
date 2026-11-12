@@ -189,7 +189,8 @@ export interface paths {
         get: operations["get_project_api_v1_projects__project_id__get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete Project */
+        delete: operations["delete_project_api_v1_projects__project_id__delete"];
         options?: never;
         head?: never;
         /** Update Project */
@@ -348,6 +349,24 @@ export interface paths {
         post?: never;
         /** Remove Member */
         delete: operations["remove_member_api_v1_projects__project_id__members__user_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Pin Project */
+        put: operations["pin_project_api_v1_projects__project_id__pin_put"];
+        post?: never;
+        /** Unpin Project */
+        delete: operations["unpin_project_api_v1_projects__project_id__pin_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -786,6 +805,11 @@ export interface components {
             id: number;
             /** Name */
             name: string;
+            /**
+             * Pinned
+             * @description Shown in the account's side menu
+             */
+            pinned: boolean;
             role: components["schemas"]["ProjectRole"];
         };
         /**
@@ -888,7 +912,7 @@ export interface components {
             /** Id */
             id: number;
             /** Labels */
-            labels: ("green" | "blue" | "amber" | "red" | "violet" | "gray")[];
+            labels: ("red" | "orange" | "amber" | "lime" | "green" | "teal" | "cyan" | "blue" | "indigo" | "violet" | "pink" | "gray")[];
             /** Position */
             position: number;
             /** Start Date */
@@ -908,7 +932,7 @@ export interface components {
             /** Due Date */
             due_date?: string | null;
             /** Labels */
-            labels?: ("green" | "blue" | "amber" | "red" | "violet" | "gray")[];
+            labels?: ("red" | "orange" | "amber" | "lime" | "green" | "teal" | "cyan" | "blue" | "indigo" | "violet" | "pink" | "gray")[];
             /** Start Date */
             start_date?: string | null;
             /** Title */
@@ -1304,6 +1328,35 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ProjectOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_project_api_v1_projects__project_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -1745,6 +1798,64 @@ export interface operations {
             path: {
                 project_id: number;
                 user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pin_project_api_v1_projects__project_id__pin_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unpin_project_api_v1_projects__project_id__pin_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: number;
             };
             cookie?: never;
         };

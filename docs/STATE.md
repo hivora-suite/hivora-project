@@ -6,6 +6,8 @@
 
 Comptes, rôles, projets, Kanban, cartes (dates, checklist, étiquettes, membres, historique), commentaires.
 
+Projets épinglés par compte dans le menu (épingle sur la page Projets et au bout du titre du projet ouvert, migration 0009), suppression définitive d'un projet, 12 couleurs d'étiquettes (D35), confirmations dans le style de l'application.
+
 Revue de sécurité (lot 8) :
 - Corrigé : essais en parallèle qui contournaient la limitation ; mot de passe et codes devinables sans limite depuis une session ; TOTP désactivé sans fermer les autres sessions ; en-têtes anti-cadre, `nosniff`, `Referrer-Policy` ; avertissement en mode `public` sans proxy de confiance ; texte des commentaires retiré de l'historique (D34, migration 0008).
 - Assumé et documenté dans `SECURITY.md` : blocage par nom d'utilisateur, Argon2 dans le processus principal, documentation de l'API publique.

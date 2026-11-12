@@ -17,3 +17,16 @@ class Project(Base):
     created_by: Mapped[int | None] = mapped_column(ForeignKey("user.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(UTCDateTime)
     archived_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+
+
+class ProjectPin(Base):
+    """A project an account keeps in its side menu."""
+
+    __tablename__ = "project_pin"
+
+    project_id: Mapped[int] = mapped_column(
+        ForeignKey("project.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("user.id", ondelete="CASCADE"), primary_key=True, index=True
+    )

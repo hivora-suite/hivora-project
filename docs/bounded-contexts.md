@@ -5,7 +5,7 @@ Le noyau `core` (configuration, erreurs, base, horloge, bus d'événements) rest
 | Contexte | Version | Responsabilités | Données | Dépendances autorisées |
 |---|---|---|---|---|
 | **Member** | V1 | Comptes, authentification, sessions, appartenance, rôles, contrôle d'accès | `user`, `session`, `project_member` | `core` |
-| **Project** | V1 | Créer, modifier, archiver | `project` | Member |
+| **Project** | V1 | Créer, modifier, archiver, supprimer, épingler | `project`, `project_pin` | Member |
 | **Task** | V1 | Cartes (dates, checklist, étiquettes, assignés, historique), colonnes, déplacement, commentaires | `task`, `task_assignee`, `checklist_item`, `task_event`, `board_column`, `comment` | Project, Member |
 | **Notification** | V1.1 | Événements vers notifications, lu/non lu | `notification` | Member, événements via `core` |
 | **Attachment** | V1.1 | Stockage, téléchargement, quotas | `attachment` | Task, Member |

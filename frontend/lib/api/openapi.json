@@ -492,6 +492,11 @@
             "title": "Name",
             "type": "string"
           },
+          "pinned": {
+            "description": "Shown in the account's side menu",
+            "title": "Pinned",
+            "type": "boolean"
+          },
           "role": {
             "$ref": "#/components/schemas/ProjectRole"
           }
@@ -502,6 +507,7 @@
           "description",
           "role",
           "archived",
+          "pinned",
           "created_at"
         ],
         "title": "ProjectOut",
@@ -770,11 +776,17 @@
           "labels": {
             "items": {
               "enum": [
-                "green",
-                "blue",
-                "amber",
                 "red",
+                "orange",
+                "amber",
+                "lime",
+                "green",
+                "teal",
+                "cyan",
+                "blue",
+                "indigo",
                 "violet",
+                "pink",
                 "gray"
               ],
               "type": "string"
@@ -848,11 +860,17 @@
           "labels": {
             "items": {
               "enum": [
-                "green",
-                "blue",
-                "amber",
                 "red",
+                "orange",
+                "amber",
+                "lime",
+                "green",
+                "teal",
+                "cyan",
+                "blue",
+                "indigo",
                 "violet",
+                "pink",
                 "gray"
               ],
               "type": "string"
@@ -1424,6 +1442,39 @@
       }
     },
     "/api/v1/projects/{project_id}": {
+      "delete": {
+        "operationId": "delete_project_api_v1_projects__project_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Project",
+        "tags": [
+          "projects"
+        ]
+      },
       "get": {
         "operationId": "get_project_api_v1_projects__project_id__get",
         "parameters": [
@@ -2129,6 +2180,74 @@
           }
         },
         "summary": "Set Member",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/pin": {
+      "delete": {
+        "operationId": "unpin_project_api_v1_projects__project_id__pin_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unpin Project",
+        "tags": [
+          "projects"
+        ]
+      },
+      "put": {
+        "operationId": "pin_project_api_v1_projects__project_id__pin_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pin Project",
         "tags": [
           "projects"
         ]

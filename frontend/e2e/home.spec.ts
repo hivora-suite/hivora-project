@@ -38,6 +38,15 @@ test("the admin signs in, replaces the initial password, creates an account, sig
   await expect(page.getByRole("cell", { name: "camille", exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "Tableau" }).click();
+  // Columns are named in the app's own dialog, also when opened from a menu.
+  await page.getByRole("button", { name: "Ajouter une colonne" }).click();
+  await page.getByRole("dialog").getByLabel("Nom de la colonne").fill("Recette");
+  await page.getByRole("dialog").getByLabel("Nom de la colonne").press("Enter");
+  await page.getByRole("button", { name: "Actions de la colonne Recette" }).click();
+  await page.getByRole("menuitem", { name: "Renommer" }).click();
+  await page.getByRole("dialog").getByLabel("Nom de la colonne").fill("Validation");
+  await page.getByRole("dialog").getByRole("button", { name: "Enregistrer" }).click();
+  await expect(page.getByRole("button", { name: "Actions de la colonne Validation" })).toBeVisible();
   await page.getByLabel("Ajouter une tâche dans À faire").fill("Rédiger le brief");
   await page.getByLabel("Ajouter une tâche dans À faire").press("Enter");
   // The card: members, due date, label, then a checklist ticked off.
@@ -137,6 +146,21 @@ test("the admin signs in, replaces the initial password, creates an account, sig
   await page.getByRole("link", { name: "Membres" }).click();
   await expect(page.getByRole("cell", { name: "Lecteur" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Retirer camille du projet" })).toHaveCount(0);
+
+  // A project is deleted for good from the list, after a confirmation.
+  await page.getByRole("link", { name: "Projets" }).click();
+  await page.getByRole("button", { name: "Nouveau projet" }).click();
+  await page.locator("#project-name").fill("Brouillon");
+  await page.getByRole("dialog").getByRole("button", { name: "Créer" }).click();
+  await page.getByRole("link", { name: "Projets" }).click();
+  // A new project is pinned in the side menu; unpinning takes it out.
+  const nav = page.getByRole("navigation");
+  await expect(nav.getByText("Brouillon")).toBeVisible();
+  await page.getByRole("button", { name: "Épingler Brouillon dans le menu" }).click();
+  await expect(nav.getByText("Brouillon")).toHaveCount(0);
+  await page.getByRole("button", { name: "Supprimer le projet Brouillon" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Supprimer" }).click();
+  await expect(page.getByRole("link", { name: /Brouillon/ })).toHaveCount(0);
 
   await page.getByRole("button", { name: "Se déconnecter" }).click();
   await expect(page).toHaveURL(/\/login\/$/);

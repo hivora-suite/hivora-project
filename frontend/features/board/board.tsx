@@ -3,6 +3,7 @@
 import { MoreHorizontal, Plus } from "lucide-react";
 import { Fragment, useRef, useState, type DragEvent } from "react";
 
+import { useAsk } from "@/components/ask";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +41,7 @@ function Column({ projectId, column, index, columnCount, tasks, members, canEdit
   onDrop: (drop: Drop) => void;
 }) {
   const { t, errorMessage } = useI18n();
+  const ask = useAsk();
   const add = useProjectMutation(boardApi.createTask);
   const rename = useProjectMutation(boardApi.updateColumn);
   const remove = useProjectMutation(boardApi.deleteColumn);
@@ -86,8 +88,8 @@ function Column({ projectId, column, index, columnCount, tasks, members, canEdit
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem
-                onSelect={() => {
-                  const name = window.prompt(t("board.columnName"), column.name)?.trim();
+                onSelect={async () => {
+                  const name = await ask({ title: t("board.renameColumn"), action: t("common.save"), field: { label: t("board.columnName"), value: column.name, max: 60 } });
                   if (name) rename.mutate({ id: projectId, columnId: column.id, name });
                 }}
               >
@@ -144,6 +146,7 @@ function Column({ projectId, column, index, columnCount, tasks, members, canEdit
 
 export function Board({ project }: { project: Project }) {
   const { t, errorMessage } = useI18n();
+  const ask = useAsk();
   const { data: board, error } = useBoard(project.id);
   const { data: members = [] } = useMembers(project.id);
   const [openId, setOpenId] = useState<number | null>(null);
@@ -203,8 +206,8 @@ export function Board({ project }: { project: Project }) {
           <Button
             variant="outline"
             className="shrink-0"
-            onClick={() => {
-              const name = window.prompt(t("board.columnName"))?.trim();
+            onClick={async () => {
+              const name = await ask({ title: t("board.addColumn"), action: t("board.addColumn"), field: { label: t("board.columnName"), max: 60 } });
               if (name) addColumn.mutate({ id: project.id, name });
             }}
           >

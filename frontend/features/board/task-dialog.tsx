@@ -1,8 +1,9 @@
 "use client";
 
-import { Pencil } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 
+import { useAsk } from "@/components/ask";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -10,7 +11,6 @@ import { Input, Label } from "@/components/ui/input";
 import type { BoardTask, ProjectMember } from "@/lib/api/client";
 import { boardApi, useProjectMutation } from "@/lib/api/hooks";
 import { useI18n } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
 
 import { AutoDescription } from "./auto-description";
 import { Checklist } from "./checklist";
@@ -28,6 +28,7 @@ export function TaskDialog({ projectId, task, members, canEdit, canManage, onClo
   onClose: () => void;
 }) {
   const { t, errorMessage } = useI18n();
+  const ask = useAsk();
   const update = useProjectMutation(boardApi.updateTask);
   const remove = useProjectMutation(boardApi.deleteTask);
   const error = update.error ?? remove.error;
@@ -64,7 +65,7 @@ export function TaskDialog({ projectId, task, members, canEdit, canManage, onClo
       }}
     />
   ) : canEdit ? (
-    <button type="button" aria-label={t("board.editTitle", { name: task.title })} onClick={() => setEditingTitle(true)} className="group flex max-w-full items-center gap-2 text-left">
+    <button type="button" aria-label={t("board.editTitle", { name: task.title })} onClick={() => setEditingTitle(true)} className="group flex min-w-0 items-center gap-2 text-left">
       <span className="min-w-0 break-words">{task.title}</span>
       <Pencil className="size-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
     </button>
@@ -77,15 +78,34 @@ export function TaskDialog({ projectId, task, members, canEdit, canManage, onClo
       <DialogContent
         title={
           <span className="flex items-center gap-3">
-            <span className="min-w-0 flex-1">{heading}</span>
+            <span className="flex min-w-0 flex-1 items-center gap-1">
+              {heading}
+              {task && canManage && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t("board.deleteTask")}
+                  loading={remove.isPending}
+                  className="size-7 shrink-0 text-muted-foreground hover:text-foreground"
+                  onClick={async () => {
+                    if ((await ask({ title: t("board.deleteConfirm", { name: task.title }), action: t("common.delete"), danger: true })) !== null) {
+                      remove.mutate({ id: projectId, taskId: task.id }, { onSuccess: close });
+                    }
+                  }}
+                >
+                  <Trash2 className="size-3.5" />
+                </Button>
+              )}
+            </span>
             <SaveState typing={typing} />
           </span>
         }
-        closeLabel={t("common.close")} className={cn("transition-[max-width] duration-200 ease-out", logOpen ? "max-w-5xl" : "max-w-2xl")}
+        closeLabel={t("common.close")} className="max-w-5xl"
         onEscapeKeyDown={(e) => editingTitle && e.preventDefault()}
       >
         {task && (
-          <div key={task.id} className={cn("grid gap-6", logOpen && "md:grid-cols-[minmax(0,1fr)_20rem]")}>
+          <div key={task.id} className="grid gap-6 md:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="grid min-w-0 content-start gap-5">
             <TaskOptions projectId={projectId} task={task} members={members} canEdit={canEdit} logOpen={logOpen} onToggleLog={() => setLogOpen(!logOpen)} />
             <div className="grid gap-1.5">
@@ -93,30 +113,19 @@ export function TaskDialog({ projectId, task, members, canEdit, canManage, onClo
               <AutoDescription id="task-description" value={task.description} disabled={!canEdit} onTyping={setTyping} onSave={(description) => update.mutate({ id: projectId, taskId: task.id, description })} />
             </div>
             <Checklist projectId={projectId} task={task} canEdit={canEdit} />
-            <Comments projectId={projectId} taskId={task.id} canEdit={canEdit} canManage={canManage} />
             {error && <Alert tone="danger">{errorMessage(error)}</Alert>}
-            {canManage && (
-              <Button
-                type="button"
-                variant="ghost"
-                className="justify-self-end text-danger"
-                loading={remove.isPending}
-                onClick={() => {
-                  if (window.confirm(t("board.deleteConfirm", { name: task.title }))) {
-                    remove.mutate({ id: projectId, taskId: task.id }, { onSuccess: close });
-                  }
-                }}
-              >
-                {t("common.delete")}
-              </Button>
-            )}
             </div>
-            {logOpen && (
-              <aside className="animate-enter grid content-start gap-3 md:sticky md:top-0 md:self-start md:border-l md:pl-6">
-                <h3 className="text-sm font-semibold">{t("board.log")}</h3>
-                <TaskLog projectId={projectId} taskId={task.id} />
-              </aside>
-            )}
+            {/* The chat, or the log in its place. */}
+            <aside className="flex min-h-0 flex-col gap-3 md:sticky md:top-0 md:h-[70vh] md:self-start md:border-l md:pl-6">
+              {logOpen ? (
+                <div key="log" className="animate-enter grid min-h-0 content-start gap-3 overflow-y-auto">
+                  <h3 className="text-sm font-semibold">{t("board.log")}</h3>
+                  <TaskLog projectId={projectId} taskId={task.id} />
+                </div>
+              ) : (
+                <Comments projectId={projectId} taskId={task.id} canEdit={canEdit} canManage={canManage} />
+              )}
+            </aside>
           </div>
         )}
       </DialogContent>

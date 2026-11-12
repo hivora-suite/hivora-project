@@ -2,6 +2,8 @@
 
 ## [Non publié]
 
+- Projets : suppression définitive ; épinglage par compte dans le menu, depuis la page Projets ou le titre du projet ouvert.
+- Étiquettes : 12 couleurs ; confirmations et saisies dans le style de l'application.
 - Sécurité : limitation des essais étendue aux requêtes parallèles et aux vérifications depuis une session ; désactiver le TOTP ferme les autres sessions ; en-têtes contre l'affichage dans un cadre ; avertissement en mode `public` sans proxy de confiance ; l'historique ne garde plus le texte des commentaires.
 - Historique des modifications de chaque carte.
 - Commentaires sur les cartes.

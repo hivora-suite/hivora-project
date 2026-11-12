@@ -23,6 +23,7 @@ class ProjectOut(BaseModel):
     description: str
     role: ProjectRole
     archived: bool
+    pinned: bool = Field(description="Shown in the account's side menu")
     created_at: datetime
 
 
@@ -64,6 +65,7 @@ def project_out(view: ProjectView) -> ProjectOut:
         description=project.description,
         role=view.role,
         archived=project.archived_at is not None,
+        pinned=view.pinned,
         created_at=project.created_at,
     )
 
@@ -107,6 +109,21 @@ async def archive_project(project_id: int, principal: Member, rt: RuntimeDep) ->
 @router.post("/{project_id}/unarchive")
 async def unarchive_project(project_id: int, principal: Member, rt: RuntimeDep) -> ProjectOut:
     return project_out(await rt.projects.set_archived(actor(principal), project_id, archived=False))
+
+
+@router.delete("/{project_id}", status_code=204)
+async def delete_project(project_id: int, principal: Member, rt: RuntimeDep) -> None:
+    await rt.projects.delete(actor(principal), project_id)
+
+
+@router.put("/{project_id}/pin", status_code=204)
+async def pin_project(project_id: int, principal: Member, rt: RuntimeDep) -> None:
+    await rt.projects.set_pinned(actor(principal), project_id, pinned=True)
+
+
+@router.delete("/{project_id}/pin", status_code=204)
+async def unpin_project(project_id: int, principal: Member, rt: RuntimeDep) -> None:
+    await rt.projects.set_pinned(actor(principal), project_id, pinned=False)
 
 
 @router.get("/{project_id}/members")

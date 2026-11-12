@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState, type ReactNode } from "react";
 
+import { AskProvider } from "@/components/ask";
 import { ApiError } from "@/lib/api/client";
 import { I18nProvider } from "@/lib/i18n";
 import { readPref } from "@/lib/prefs";
@@ -35,7 +36,9 @@ export function Providers({ children }: { children: ReactNode }) {
   }, []);
   return (
     <QueryClientProvider client={client}>
-      <I18nProvider>{children}</I18nProvider>
+      <I18nProvider>
+        <AskProvider>{children}</AskProvider>
+      </I18nProvider>
     </QueryClientProvider>
   );
 }

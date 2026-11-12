@@ -15,7 +15,20 @@ router = APIRouter(tags=["board"])
 Title = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 ColumnName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=60)]
 Position = Annotated[int, Field(ge=0)]
-LabelColor = Literal["green", "blue", "amber", "red", "violet", "gray"]
+LabelColor = Literal[
+    "red",
+    "orange",
+    "amber",
+    "lime",
+    "green",
+    "teal",
+    "cyan",
+    "blue",
+    "indigo",
+    "violet",
+    "pink",
+    "gray",
+]
 
 
 class ColumnOut(BaseModel):

@@ -89,7 +89,7 @@ def test_dates_and_labels(client: TestClient) -> None:
 
     refused = client.patch(route, json={"due_date": "2026-11-01"}, headers=headers)
     assert (refused.status_code, error(refused)) == (422, "invalid_dates")
-    assert client.patch(route, json={"labels": ["pink"]}, headers=headers).status_code == 422
+    assert client.patch(route, json={"labels": ["magenta"]}, headers=headers).status_code == 422
     assert client.patch(route, json={"due_date": None}, headers=headers).json()["due_date"] is None
 
 

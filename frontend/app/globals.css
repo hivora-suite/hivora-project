@@ -27,6 +27,19 @@
   --nav-apps: oklch(.54 .25 293);
   --nav-network: oklch(0.5 0.11 210);
   --nav-admin: oklch(0.5 0.13 345);
+  /* Card labels, one hue each (never the status colours). */
+  --label-red: oklch(0.55 0.15 27);
+  --label-orange: oklch(0.55 0.15 50);
+  --label-amber: oklch(0.55 0.15 75);
+  --label-lime: oklch(0.55 0.15 125);
+  --label-green: oklch(0.55 0.15 150);
+  --label-teal: oklch(0.55 0.15 180);
+  --label-cyan: oklch(0.55 0.15 210);
+  --label-blue: oklch(0.55 0.15 245);
+  --label-indigo: oklch(0.55 0.15 275);
+  --label-violet: oklch(0.55 0.15 300);
+  --label-pink: oklch(0.55 0.15 350);
+  --label-gray: oklch(0.55 0 0);
   --grid: oklch(0 0 0 / 0.055);
   --field: oklch(0.985 0 0);
   /* Depth: neutral shadows and a light edge on raised surfaces. */
@@ -63,6 +76,18 @@
   --nav-apps: oklch(.74 .17 293);
   --nav-network: oklch(0.76 0.11 210);
   --nav-admin: oklch(0.76 0.12 345);
+  --label-red: oklch(0.72 0.14 27);
+  --label-orange: oklch(0.72 0.14 50);
+  --label-amber: oklch(0.72 0.14 75);
+  --label-lime: oklch(0.72 0.14 125);
+  --label-green: oklch(0.72 0.14 150);
+  --label-teal: oklch(0.72 0.14 180);
+  --label-cyan: oklch(0.72 0.14 210);
+  --label-blue: oklch(0.72 0.14 245);
+  --label-indigo: oklch(0.72 0.14 275);
+  --label-violet: oklch(0.72 0.14 300);
+  --label-pink: oklch(0.72 0.14 350);
+  --label-gray: oklch(0.72 0 0);
   --grid: oklch(1 0 0 / 0.065);
   --warn: oklch(0.72 0.15 70);
   --danger: oklch(0.58 0.2 27);
@@ -110,7 +135,25 @@
   --color-warn: var(--warn);
   --color-danger: var(--danger);
   --color-idle: var(--idle);
+  --color-label-red: var(--label-red);
+  --color-label-orange: var(--label-orange);
+  --color-label-amber: var(--label-amber);
+  --color-label-lime: var(--label-lime);
+  --color-label-green: var(--label-green);
+  --color-label-teal: var(--label-teal);
+  --color-label-cyan: var(--label-cyan);
+  --color-label-blue: var(--label-blue);
+  --color-label-indigo: var(--label-indigo);
+  --color-label-violet: var(--label-violet);
+  --color-label-pink: var(--label-pink);
+  --color-label-gray: var(--label-gray);
   --color-sidebar: var(--sidebar);
+}
+
+/* Thin scrollbars in the theme colours, everywhere. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
 
 body {

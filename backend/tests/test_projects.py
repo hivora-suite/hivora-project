@@ -49,6 +49,8 @@ def test_outsiders_get_a_404_on_every_route(client: TestClient) -> None:
         ("GET", f"{P}/{project_id}", None),
         ("PATCH", f"{P}/{project_id}", {"name": "x"}),
         ("POST", f"{P}/{project_id}/archive", None),
+        ("DELETE", f"{P}/{project_id}", None),
+        ("PUT", f"{P}/{project_id}/pin", None),
         ("GET", f"{P}/{project_id}/members", None),
         ("GET", f"{P}/{project_id}/candidates", None),
         ("PUT", f"{P}/{project_id}/members/1", {"role": "viewer"}),
@@ -71,6 +73,7 @@ def test_roles_inside_a_project(client: TestClient) -> None:
     for method, path, body in (
         ("PATCH", f"{P}/{project_id}", {"name": "x"}),
         ("POST", f"{P}/{project_id}/archive", None),
+        ("DELETE", f"{P}/{project_id}", None),
         ("GET", f"{P}/{project_id}/candidates", None),
         ("DELETE", route, None),
     ):
@@ -156,3 +159,33 @@ def test_an_admin_chooses_the_projects_of_an_account(client: TestClient) -> None
     assert client.get("/api/v1/users/9999/projects").status_code == 404
     sign_in(client, "bob")
     assert client.get(route).status_code == 403
+
+
+def test_deleting_a_project_removes_everything_in_it(client: TestClient) -> None:
+    from tests.test_tasks import new_task
+
+    project_id, _, bob = setup_project(client)
+    headers = sign_in(client, "alice")
+    client.put(f"{P}/{project_id}/members/{bob}", json={"role": "viewer"}, headers=headers)
+    task = new_task(client, project_id, headers, "a")
+    client.post(f"{P}/{project_id}/tasks/{task}/comments", json={"body": "x"}, headers=headers)
+    client.post(f"{P}/{project_id}/archive", headers=headers)
+    assert client.delete(f"{P}/{project_id}", headers=headers).status_code == 204
+    assert client.get(f"{P}/{project_id}").status_code == 404
+    assert client.get(P, params={"archived": True}).json() == []
+
+
+def test_each_account_pins_its_own_projects(client: TestClient) -> None:
+    project_id, _, bob = setup_project(client)
+    headers = sign_in(client, "alice")
+    assert client.get(P).json()[0]["pinned"] is True  # the creator's new project
+    client.put(f"{P}/{project_id}/members/{bob}", json={"role": "viewer"}, headers=headers)
+    bob_headers = sign_in(client, "bob")
+    assert client.get(f"{P}/{project_id}").json()["pinned"] is False
+    for _ in range(2):  # twice changes nothing
+        assert client.put(f"{P}/{project_id}/pin", headers=bob_headers).status_code == 204
+    assert client.get(P).json()[0]["pinned"] is True
+    assert client.delete(f"{P}/{project_id}/pin", headers=bob_headers).status_code == 204
+    assert client.get(P).json()[0]["pinned"] is False
+    sign_in(client, "alice")
+    assert client.get(P).json()[0]["pinned"] is True

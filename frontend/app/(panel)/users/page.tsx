@@ -3,6 +3,7 @@
 import { MoreHorizontal, UserPlus } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
+import { useAsk } from "@/components/ask";
 import { PageHeader, useSession } from "@/components/app-shell";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -108,6 +109,7 @@ function ResetPasswordDialog({ user, onClose }: { user: User | null; onClose: ()
 
 export default function UsersPage() {
   const { t, lang, errorMessage } = useI18n();
+  const ask = useAsk();
   const { me, can } = useSession();
   const { data: users } = useUsers();
   const [creating, setCreating] = useState(false);
@@ -183,8 +185,8 @@ export default function UsersPage() {
                     <DropdownMenuItem
                       disabled={u.id === me.id}
                       className="text-danger"
-                      onSelect={() => {
-                        if (window.confirm(t("users.deleteConfirm", { name: u.username }))) remove.mutate(u.id);
+                      onSelect={async () => {
+                        if ((await ask({ title: t("users.deleteConfirm", { name: u.username }), action: t("common.delete"), danger: true })) !== null) remove.mutate(u.id);
                       }}
                     >
                       {t("common.delete")}

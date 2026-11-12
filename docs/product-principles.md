@@ -17,6 +17,7 @@ Toute interaction se vérifie contre cette liste avant d'être conçue.
 - Sur le Kanban, ajouter une tâche se fait directement dans la colonne.
 - Déplacer une tâche : glisser-déposer, ou Alt + flèches sur son bouton d'ouverture.
 - Sur une carte, ce qui change rarement (membres, étiquettes, dates) est derrière de petits boutons.
+- Les commentaires d'une carte forment un chat dans une colonne à droite : plus anciens en haut, mes messages à droite, saisie en bas, Entrée envoie et Maj + Entrée passe à la ligne ; le bouton Log remplace le chat par l'historique.
 - Une carte s'enregistre seule ; une icône indique l'état, détaillé au survol, et la coche disparaît après 5 s.
 - Une action destructive indique ce qui sera supprimé et demande confirmation.
 

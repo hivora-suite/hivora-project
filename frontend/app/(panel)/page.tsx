@@ -1,19 +1,21 @@
 "use client";
 
-import { FolderPlus } from "lucide-react";
+import { FolderPlus, Pin, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { PageHeader } from "@/components/app-shell";
+import { useAsk } from "@/components/ask";
 import { ShelfCat } from "@/components/shelf-cat";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input, Label, Switch } from "@/components/ui/input";
-import { useCreateProject, useProjects } from "@/lib/api/hooks";
+import { projectApi, useCreateProject, useProjectMutation, useProjects } from "@/lib/api/hooks";
 import { useI18n } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 function CreateProjectDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t, lang, errorMessage } = useI18n();
@@ -44,7 +46,11 @@ function CreateProjectDialog({ open, onOpenChange }: { open: boolean; onOpenChan
 }
 
 export default function Home() {
-  const { t } = useI18n();
+  const { t, errorMessage } = useI18n();
+  const ask = useAsk();
+  const remove = useProjectMutation(projectApi.remove);
+  const pin = useProjectMutation(projectApi.pin);
+  const error = remove.error ?? pin.error;
   const [archived, setArchived] = useState(false);
   const [creating, setCreating] = useState(false);
   const { data: projects } = useProjects(archived);
@@ -68,9 +74,11 @@ export default function Home() {
           <ShelfCat />
         </div>
       )}
+      {error && <Alert tone="danger" className="mb-4">{errorMessage(error)}</Alert>}
       <div className="stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {projects?.map((p) => (
-          <Link key={p.id} href={`/project/?id=${p.id}`} className="surface grid gap-2 rounded-xl p-5 transition-transform hover:-translate-y-0.5">
+          <div key={p.id} className="relative grid transition-transform hover:-translate-y-0.5">
+          <Link href={`/project/?id=${p.id}`} className="surface grid gap-2 rounded-xl p-5">
             <span className="flex items-start justify-between gap-2">
               <span className="min-w-0 break-words font-semibold">{p.name}</span>
               {p.archived && <Badge>{t("projects.archived")}</Badge>}
@@ -78,6 +86,32 @@ export default function Home() {
             {p.description && <span className="line-clamp-2 text-sm text-muted-foreground">{p.description}</span>}
             <span className="text-xs text-muted-foreground">{t(`projectRole.${p.role}`)}</span>
           </Link>
+          <span className="absolute bottom-3 right-3 flex">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t("projects.pin", { name: p.name })}
+            aria-pressed={p.pinned}
+            className={cn("size-7 hover:text-foreground", p.pinned ? "text-primary" : "text-muted-foreground")}
+            onClick={() => pin.mutate({ id: p.id, pinned: !p.pinned })}
+          >
+            <Pin className={cn("size-3.5", p.pinned && "fill-current")} />
+          </Button>
+          {p.role === "manager" && (
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={t("projects.delete", { name: p.name })}
+              className="size-7 text-muted-foreground hover:text-foreground"
+              onClick={async () => {
+                if ((await ask({ title: t("projects.deleteConfirm", { name: p.name }), action: t("common.delete"), danger: true })) !== null) remove.mutate(p.id);
+              }}
+            >
+              <Trash2 className="size-3.5" />
+            </Button>
+          )}
+          </span>
+          </div>
         ))}
       </div>
       <CreateProjectDialog open={creating} onOpenChange={setCreating} />

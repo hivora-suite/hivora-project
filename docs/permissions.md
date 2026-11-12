@@ -26,6 +26,8 @@
 |---|---|---|---|
 | Voir le projet, le tableau, les commentaires | Oui | Oui | Oui |
 | Modifier, archiver ou réactiver le projet | Oui | Non | Non |
+| Supprimer définitivement le projet | Oui | Non | Non |
+| Épingler le projet dans son menu | Oui | Oui | Oui |
 | Gérer les membres et leurs rôles | Oui | Non | Non |
 | Gérer les colonnes | Oui | Non | Non |
 | Créer, modifier, déplacer, assigner une tâche | Oui | Oui | Non |

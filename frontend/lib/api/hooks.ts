@@ -130,6 +130,8 @@ export const projectApi = {
     api<Project>(`/projects/${id}`, { method: "PATCH", body: b }),
   archive: (id: number) => api<Project>(`/projects/${id}/archive`, { method: "POST" }),
   unarchive: (id: number) => api<Project>(`/projects/${id}/unarchive`, { method: "POST" }),
+  remove: (id: number) => api<void>(`/projects/${id}`, { method: "DELETE" }),
+  pin: ({ id, pinned }: { id: number; pinned: boolean }) => api<void>(`/projects/${id}/pin`, { method: pinned ? "PUT" : "DELETE" }),
   setMember: ({ id, userId, role }: { id: number; userId: number; role: ProjectRole }) =>
     api<void>(`/projects/${id}/members/${userId}`, { method: "PUT", body: { role } }),
   removeMember: ({ id, userId }: { id: number; userId: number }) =>

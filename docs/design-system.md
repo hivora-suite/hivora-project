@@ -24,6 +24,7 @@ Même structure visuelle que Hivora Panel, avec son propre accent violet. Source
 | Bordures | `--border`, `--input`, `--ring` |
 | Action | `--primary`, `--primary-foreground`, `--destructive` |
 | États | `--ok`, `--info`, `--warn`, `--danger`, `--idle` |
+| Étiquettes | `--label-<nom>` : red, orange, amber, lime, green, teal, cyan, blue, indigo, violet, pink, gray (D35) |
 | Profondeur | `--shadow-color`, `--shadow-strong`, `--highlight` |
 | Groupes de navigation | une teinte par groupe, jamais une couleur d'état |
 
@@ -31,6 +32,8 @@ Même structure visuelle que Hivora Panel, avec son propre accent violet. Source
 
 - Jamais de couleur en dur : uniquement des tokens. Le thème sombre ne redéfinit que des tokens.
 - Contraste du texte d'au moins 4,5:1 (WCAG AA).
+- Barres de défilement fines, aux couleurs du thème (`--border`).
+- Pas de fenêtre native du navigateur (`prompt`, `confirm`) : la fenêtre de l'application, `useAsk`.
 - Menus neutres, sans violet : un projet déplié forme un bloc surélevé. Ombres neutres et léger reflet sur les surfaces en relief.
 - La grille de fond couvre l'écran, en fondu sous les en-têtes.
 - Une seule courbe pour les ouvertures, `--ease-out`, courtes (160 à 320 ms). Ce qui se déplie passe par `Collapse`.
