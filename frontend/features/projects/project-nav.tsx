@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronsDownUp, ChevronsUpDown, Minus, Pin, Plus, SlidersHorizontal, SquareKanban, Users } from "lucide-react";
+import { CalendarDays, ChevronsDownUp, ChevronsUpDown, Minus, Pin, Plus, SlidersHorizontal, SquareKanban, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
@@ -15,6 +15,7 @@ import { useProjectId } from "./project-screen";
 
 const TABS: { path: string; label: MessageKey; icon: typeof Users; manager?: boolean }[] = [
   { path: "/project/", label: "project.tab.board", icon: SquareKanban },
+  { path: "/project/planning/", label: "project.tab.planning", icon: CalendarDays },
   { path: "/project/members/", label: "project.tab.members", icon: Users },
   { path: "/project/settings/", label: "project.tab.settings", icon: SlidersHorizontal, manager: true },
 ];

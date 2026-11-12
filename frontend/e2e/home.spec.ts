@@ -119,6 +119,22 @@ test("the admin signs in, replaces the initial password, creates an account, sig
   await page.getByRole("menuitem", { name: "Déplacer à gauche" }).click();
   await expect(page.getByRole("region").first()).toHaveAccessibleName("En cours");
 
+  // The planning tab: the card on its due date, opened from the calendar.
+  await page.getByRole("link", { name: "Planning" }).click();
+  await expect(page).toHaveURL(/\/project\/planning\//);
+  const month = page.locator("h2[aria-live]");
+  for (let i = 0; i < 120 && (await month.textContent()) !== "juin 2030"; i++) await page.getByRole("button", { name: "Mois suivant" }).click();
+  const day = page.getByRole("group", { name: /15 juin 2030/ });
+  await day.getByRole("button", { name: "Rédiger le brief client" }).click();
+  await expect(page.getByRole("dialog").getByRole("heading", { level: 2 })).toContainText("Rédiger le brief client");
+  await page.getByRole("button", { name: "Fermer" }).click();
+  // The open project is pinned or unpinned from its title in the side menu.
+  const pinOpen = page.getByRole("navigation").getByRole("button", { name: "Épingler Site vitrine dans le menu" });
+  await pinOpen.click();
+  await expect(pinOpen).toHaveAttribute("aria-pressed", "false");
+  await pinOpen.click();
+  await expect(pinOpen).toHaveAttribute("aria-pressed", "true");
+
   // The accounts page chooses which projects an account can open.
   await page.getByRole("link", { name: "Utilisateurs" }).click();
   await page.getByRole("button", { name: "Actions pour camille" }).click();

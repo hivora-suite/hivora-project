@@ -38,4 +38,5 @@ Une ligne par décision. Toutes datées du 09/11/2026.
 | D32 | Liste des projets en blocs ; barre latérale : projets épinglés par compte, dépliables (+) vers leurs onglets, avec Tout déplier / Tout replier ; la page des comptes attribue aussi l'accès aux projets | Demande de l'utilisateur : fonctionnalités séparées de la configuration |
 | D33 | Dates, checklist, étiquettes et plusieurs assignés avancés en V1, sur la carte (contexte Task) ; le calendrier reste en V1.2 | Demande de l'utilisateur, cartes proches de Trello |
 | D34 | L'historique d'une carte note l'ajout, la modification et la suppression d'un commentaire, sans jamais son texte ; une migration efface le texte déjà stocké | Choix de l'utilisateur à la revue de sécurité : un commentaire supprimé ne doit rien laisser |
-| D35 | 12 couleurs d'étiquettes en tokens `--label-<nom>`, hors couleurs d'état ; pas de couleur libre | Demande de l'utilisateur |
+| D35 | 12 couleurs d'étiquettes en tokens `--label-<nom>`, hors couleurs d'état ; pas de couleur libre | Demande |
+| D36 | Calendrier mensuel avancé en V1 | Demande |

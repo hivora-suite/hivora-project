@@ -4,9 +4,9 @@
 
 | Version | Contenu | Critère de sortie |
 |---|---|---|
-| **V1** | Projects, Tasks (cartes avec dates, checklist, étiquettes, plusieurs membres), Kanban, Comments, Members, Roles ; connexion, sessions, CSRF, limitation des essais, TOTP ; release GitHub, documentation d'installation et `deploy/compose.yaml` | Une équipe réelle gère un projet de bout en bout |
+| **V1** | Projects, Tasks (cartes avec dates, checklist, étiquettes, plusieurs membres), Kanban, calendrier (Planning, lecture des dates des cartes), Comments, Members, Roles ; connexion, sessions, CSRF, limitation des essais, TOTP ; release GitHub, documentation d'installation et `deploy/compose.yaml` | Une équipe réelle gère un projet de bout en bout |
 | **V1.1** | Vue liste et filtres, temps réel, Notification, Attachment | Plus de rechargement manuel ; notifications et pièces jointes disponibles |
-| **V1.2** | Planning (calendrier), TimeTracking | Calendrier et temps suivis sur les projets |
+| **V1.2** | Planning (jalons), TimeTracking | Jalons et temps suivis sur les projets |
 | **V2** | Dépendances, Gantt, reporting avancé | Besoin confirmé par l'usage |
 
 Tout ce qui sort de la version en cours est refusé par défaut et signalé avant de coder. Une feature ne change de version que par une ligne dans `decisions.md`.

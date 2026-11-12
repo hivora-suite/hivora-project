@@ -6,6 +6,8 @@
 
 Comptes, rôles, projets, Kanban, cartes (dates, checklist, étiquettes, membres, historique), commentaires.
 
+Onglet Planning : calendrier du mois avec les cartes datées, fiche ouverte au clic (D36).
+
 Projets épinglés par compte dans le menu (épingle sur la page Projets et au bout du titre du projet ouvert, migration 0009), suppression définitive d'un projet, 12 couleurs d'étiquettes (D35), confirmations dans le style de l'application.
 
 Revue de sécurité (lot 8) :
