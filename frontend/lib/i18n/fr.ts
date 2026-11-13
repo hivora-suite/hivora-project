@@ -154,6 +154,8 @@ export const fr = {
   "error.event_dates": "Un événement ne peut pas finir avant de commencer.",
   "planning.next": "Suivant",
   "planning.previous": "Précédent",
+  "planning.toKanban": "Ajouter au Kanban",
+  "planning.column": "Colonne",
   "planning.allDay": "Toute la journée",
   "planning.startTime": "Heure de début",
   "planning.endTime": "Heure de fin",

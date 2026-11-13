@@ -20,13 +20,13 @@ Une ligne par décision. Toutes datées du 09/11/2026.
 | D14 | V1 = monolithe : aucun microservice, aucun service séparé, aucun découpage distribué avant validation explicite | Simplicité |
 | D15 | SQLite WAL en V1, compatibilité PostgreSQL obligatoire (`conventions.md`) | Migration future sans réécriture métier |
 | D16 | Tout secret exposé est compromis et doit être remplacé (`conventions.md`) | Une suppression n'annule pas une exposition |
-| D17 | TOTP en V1 : activation par utilisateur, codes de secours, réinitialisation par un administrateur, obligatoire pour les instances exposées publiquement | Exposition Internet à prévoir |
-| D18 | Dépôt public depuis le 09/11/2026 ; revue de sécurité obligatoire avant toute release stable ; aucun secret ni information d'infrastructure dans le dépôt | Code AGPL ouvert, sans publier de version stable non revue |
+| D17 | TOTP en V1 : activation par utilisateur, codes de secours, réinitialisation par un administrateur, obligatoire en mode `public` | Exposition Internet à prévoir |
+| D18 | Dépôt public depuis le 09/11/2026 ; revue de sécurité obligatoire avant toute release stable | Code AGPL ouvert, sans publier de version stable non revue |
 | D19 | Pas de dépôt ni de documentation dédiés à la sécurité : elle est portée par le code, ses tests, la revue avant release et `SECURITY.md` (révisée le 10/11/2026) | Simplicité, demande de l'utilisateur |
 | D20 | Licence AGPL-3.0 | Cohérence avec le panel |
 | D21 | Vue liste et temps réel en V1.1 | V1 limitée |
 | D22 | Rôles : `admin` et `member` pour l'instance ; `manager`, `contributor`, `viewer` par projet (`permissions.md`) | Modèle simple |
-| D23 | V1 autonome : déploiement uniquement par release GitHub, documentation d'installation et `deploy/compose.yaml` ; Hivora Panel en lecture seule ; intégration au catalogue réévaluée après la V1 | Aucun impact sur le panel |
+| D23 | V1 autonome : déploiement par release GitHub seulement (`deployment.md`) ; Hivora Panel en lecture seule ; intégration au catalogue réévaluée après la V1 | Aucun impact sur le panel |
 | D24 | Détection de secrets : `gitleaks` en CI ; contrôle local à motifs avant commit | Rien à installer sur la VM |
 | D25 | HTTP sur le port 8080 dans le conteneur, HTTPS par un reverse proxy en amont | Pas de gestion de certificats dans l'application |
 | D26 | Accent violet vif, neutres noir et blanc sans teinte, blancs adoucis | Identité propre, distincte du panel |
@@ -42,3 +42,4 @@ Une ligne par décision. Toutes datées du 09/11/2026.
 | D36 | Planning en V1 : vues jour à année ; événements `calendar_event` (heures `HH:MM` sans fuseau ou journée entière), créés en glissant ; « Mon planning » : mes cartes et mes événements privés | Demande |
 | D37 | Mon kanban : mes cartes des projets, rangées à part (`task_placement`) dans mes colonnes perso ; projet perso caché (`project.owner_id`), à son seul propriétaire | Demande |
 | D38 | Validée : un statut, la carte ne bouge pas ; posée en Terminé, validée | Demande |
+| D39 | « Ajouter au Kanban » sur un nouvel événement journée : une carte dans la colonne choisie, à sa place | Demande |

@@ -8,9 +8,9 @@ Comptes, rôles, projets, Kanban, cartes (dates, checklist, étiquettes, membres
 
 Planning (D36, migrations 0010-0012) : vues jour, semaine, mois, année ; cartes et événements (heures ou journée), créés en glissant ou sur des jours choisis (Ctrl + clic) ; « Mon planning » : mes cartes et événements privés.
 
-Kanban (ex-Tableau). « Mon kanban » (D37, migrations 0013-0014) : cartes des projets rangées chez moi ; Valider/dévalider (D38, 0015-0016).
+Kanban : « Mon kanban » (D37, 0013-0014), Valider (D38, 0015-0016), « Ajouter au Kanban » depuis le planning (D39).
 
-Projets épinglés dans le menu (migration 0009), suppression d'un projet, 12 couleurs d'étiquettes (D35), confirmations intégrées.
+Projets épinglés (0009), suppression d'un projet, 12 couleurs d'étiquettes (D35).
 
 Revue de sécurité (lot 8) :
 - Corrigé : essais en parallèle qui contournaient la limitation ; mot de passe et codes devinables sans limite depuis une session ; TOTP désactivé sans fermer les autres sessions ; en-têtes anti-cadre, `nosniff`, `Referrer-Policy` ; avertissement en mode `public` sans proxy de confiance ; texte des commentaires retiré de l'historique (D34, migration 0008).

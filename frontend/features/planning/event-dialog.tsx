@@ -7,10 +7,10 @@ import { useAsk } from "@/components/ask";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Input, Label, Switch, Textarea } from "@/components/ui/input";
+import { Input, Label, Select, Switch, Textarea } from "@/components/ui/input";
 import { LABELS } from "@/features/board/labels";
-import type { CalendarEvent } from "@/lib/api/client";
-import { eventApi, useProjectMutation } from "@/lib/api/hooks";
+import type { BoardColumn, CalendarEvent } from "@/lib/api/client";
+import { boardApi, eventApi, useProjectMutation } from "@/lib/api/hooks";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -18,20 +18,31 @@ import type { Draft } from "./items";
 
 const COLORS = Object.keys(LABELS) as CalendarEvent["color"][];
 
-/** An event's form: `event` is the event, or the slot of a new one. */
-export function EventDialog({ projectId, event, canEdit, onClose }: { projectId: number | null; event: CalendarEvent | Draft | null; canEdit: boolean; onClose: () => void }) {
+type Kanban = { id: number; columns: BoardColumn[] };
+
+/** An event's form: `event` is the event, or the slot of a new one; a new all-day one may instead be a card in a `kanban` column (D39). */
+export function EventDialog({ projectId, kanban, event, canEdit, onClose }: { projectId: number | null; kanban?: Kanban; event: CalendarEvent | Draft | null; canEdit: boolean; onClose: () => void }) {
   const { t, lang, errorMessage } = useI18n();
   const ask = useAsk();
-  const create = useProjectMutation(eventApi.create);
+  // ponytail: two requests, a failed update leaves an undated card; dates on card creation if that matters.
+  const create = useProjectMutation(({ column, ...b }: Parameters<typeof eventApi.create>[0] & { column: number | null }) =>
+    column && kanban
+      ? boardApi
+          .createTask({ id: kanban.id, title: b.title, column_id: column })
+          .then((c) => boardApi.updateTask({ id: kanban.id, taskId: c.id, description: b.note, start_date: b.start_date, due_date: b.end_date, labels: [b.color] }))
+      : eventApi.create(b),
+  );
   const update = useProjectMutation(eventApi.update);
   const remove = useProjectMutation(eventApi.remove);
   const failure = create.error ?? update.error ?? remove.error;
   const old = event && "id" in event ? event : null;
   const [allDay, setAllDay] = useState(true);
+  const [toKanban, setToKanban] = useState(false);
   // Days picked one by one: one independent event per day.
   const [days, setDays] = useState<string[]>([]);
   useEffect(() => {
     setAllDay(!event?.start_time);
+    setToKanban(false);
     setDays(event && !("id" in event) ? (event.days ?? []) : []);
   }, [event]);
   const close = () => {
@@ -58,11 +69,12 @@ export function EventDialog({ projectId, event, canEdit, onClose }: { projectId:
                 color: String(f.get("color")) as CalendarEvent["color"],
                 note: String(f.get("note")).trim(),
               };
+              const column = toKanban && allDay ? Number(f.get("column")) : null;
               if (old) update.mutate({ id: projectId, eventId: old.id, ...fields }, { onSuccess: close });
               else if (days.length)
                 // ponytail: one request per day, a failure leaves the others created; a batch route if that matters.
-                Promise.all(days.map((d) => create.mutateAsync({ id: projectId, ...fields, start_date: d, end_date: d }))).then(close, () => {});
-              else create.mutate({ id: projectId, ...fields }, { onSuccess: close });
+                Promise.all(days.map((d) => create.mutateAsync({ id: projectId, ...fields, start_date: d, end_date: d, column }))).then(close, () => {});
+              else create.mutate({ id: projectId, ...fields, column }, { onSuccess: close });
             }}
           >
             {failure && <Alert tone="danger">{errorMessage(failure)}</Alert>}
@@ -117,6 +129,25 @@ export function EventDialog({ projectId, event, canEdit, onClose }: { projectId:
                     <Input id="event-end-time" name="endTime" type="time" step={900} required defaultValue={event?.end_time === "24:00" ? "23:59" : (event?.end_time ?? "10:00")} />
                   </div>
                 </div>
+              )}
+              {!old && kanban && kanban.columns.length > 0 && (
+                <>
+                  <label className="flex items-center gap-2 text-sm">
+                    <Switch checked={toKanban && allDay} disabled={!allDay} onChange={(e) => setToKanban(e.target.checked)} /> {t("planning.toKanban")}
+                  </label>
+                  {toKanban && allDay && (
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="event-column">{t("planning.column")}</Label>
+                      <Select id="event-column" name="column">
+                        {kanban.columns.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+                  )}
+                </>
               )}
               <div role="radiogroup" aria-label={t("planning.color")} className="flex flex-wrap gap-2">
                 {COLORS.map((c) => (

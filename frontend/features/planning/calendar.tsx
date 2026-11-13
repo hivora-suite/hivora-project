@@ -19,7 +19,7 @@ function taskItem(task: BoardTask, today: string, open: () => void, hint?: strin
   const from = task.start_date ?? task.due_date;
   const to = task.due_date ?? task.start_date;
   if (!from || !to) return null;
-  return { key: `t${task.id}`, title: task.title, from, to, hint, color: task.labels[0], late: !!task.due_date && task.due_date < today, done: task.done, open };
+  return { key: `t${task.id}`, title: task.title, from, to, hint, color: task.labels[0], late: !!task.due_date && task.due_date < today, done: task.done, task: true, open };
 }
 
 const isItem = (i: Item | null): i is Item => !!i;
@@ -64,7 +64,7 @@ export function Calendar({ project }: { project: Project }) {
         canManage={canManage}
         onClose={() => setOpenId(null)}
       />
-      <EventDialog projectId={project.id} event={event} canEdit={canEdit} onClose={() => setEvent(null)} />
+      <EventDialog projectId={project.id} kanban={board && { id: project.id, columns: board.columns }} event={event} canEdit={canEdit} onClose={() => setEvent(null)} />
     </div>
   );
 }
@@ -95,7 +95,7 @@ export function MyCalendar() {
     <div className="mb-6 grid gap-3">
       {failure && <Alert tone="danger">{errorMessage(failure)}</Alert>}
       <Planner items={items} onCreate={setEvent} />
-      <EventDialog projectId={null} event={event} canEdit onClose={() => setEvent(null)} />
+      <EventDialog projectId={null} kanban={personal && own && { id: personal.id, columns: own.columns }} event={event} canEdit onClose={() => setEvent(null)} />
       {personal && <TaskDialog projectId={personal.id} task={own?.tasks.find((task) => task.id === openId)} members={[]} canEdit canManage onClose={() => setOpenId(null)} />}
     </div>
   );

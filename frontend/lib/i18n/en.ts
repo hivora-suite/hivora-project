@@ -155,6 +155,8 @@ export const en: Record<MessageKey, string> = {
   "error.event_dates": "An event cannot end before it starts.",
   "planning.next": "Next",
   "planning.previous": "Previous",
+  "planning.toKanban": "Add to Kanban",
+  "planning.column": "Column",
   "planning.allDay": "All day",
   "planning.startTime": "Start time",
   "planning.endTime": "End time",

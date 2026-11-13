@@ -155,7 +155,7 @@ export const boardApi = {
   deleteColumn: ({ id, columnId }: { id: number; columnId: number }) =>
     api<void>(`/projects/${id}/columns/${columnId}`, { method: "DELETE" }),
   createTask: ({ id, ...b }: { id: number; title: string; column_id: number }) =>
-    api<unknown>(`/projects/${id}/tasks`, { method: "POST", body: b }),
+    api<BoardTask>(`/projects/${id}/tasks`, { method: "POST", body: b }),
   updateTask: ({ id, taskId, ...b }: { id: number; taskId: number; title?: string; description?: string; start_date?: string | null; due_date?: string | null; labels?: BoardTask["labels"]; assignee_ids?: number[] }) =>
     api<unknown>(`/projects/${id}/tasks/${taskId}`, { method: "PATCH", body: b }),
   moveTask: ({ id, taskId, ...b }: { id: number; taskId: number; column_id: number; position: number }) =>
