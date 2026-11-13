@@ -7,7 +7,7 @@ import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 import { addDays, iso, monthDays, parse } from "./dates";
-import { barEnds, Chip, MAX_LANES, More, weekBars, type Draft, type Item } from "./items";
+import { barEnds, Chip, MAX_LANES, More, SHADE, weekBars, type Draft, type Item } from "./items";
 
 const dayAt = (x: number, y: number) => document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-day]")?.dataset.day;
 
@@ -55,7 +55,7 @@ export function MonthView({ anchor, items, onCreate, picked, onPick }: {
         onPointerCancel={() => setDrag(null)}
       >
         {days.slice(0, 7).map((d) => (
-          <div key={d.getDay()} aria-hidden className="bg-card px-2 py-1.5 text-xs font-medium capitalize text-muted-foreground">
+          <div key={d.getDay()} aria-hidden className="bg-card px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {d.toLocaleDateString(lang, { weekday: "short" })}
           </div>
         ))}
@@ -71,15 +71,17 @@ export function MonthView({ anchor, items, onCreate, picked, onPick }: {
               aria-label={picked.includes(day) ? t("planning.pickedDay", { day: label }) : label}
               onPointerDown={(e) => onCreate && e.button === 0 && e.pointerType !== "touch" && setDrag({ a: day, b: day, add: e.ctrlKey || e.metaKey })}
               className={cn(
-                "group relative min-h-32 bg-card p-1.5",
-                d.getMonth() !== anchor.getMonth() && "bg-muted/40 text-muted-foreground",
+                "group relative min-h-36 bg-card p-2",
+                (d.getDay() % 6 === 0 || d.getMonth() !== anchor.getMonth()) && SHADE.quiet,
+                d.getMonth() !== anchor.getMonth() && "text-muted-foreground",
+                day === today && SHADE.today,
                 onCreate && "cursor-cell",
                 ((drag && lo <= day && day <= hi) || picked.includes(day)) && "bg-primary/15",
                 picked.includes(day) && "ring-2 ring-inset ring-primary",
               )}
             >
               <div className="flex items-center justify-between">
-                <span className={cn("grid size-7 place-items-center rounded-full text-sm", day === today && "bg-primary font-semibold text-primary-foreground")}>
+                <span className={cn("grid size-7 place-items-center rounded-full text-sm font-medium", day === today && "bg-primary font-semibold text-primary-foreground")}>
                   {d.getDate()}
                 </span>
                 {onCreate && (
@@ -100,11 +102,11 @@ export function MonthView({ anchor, items, onCreate, picked, onPick }: {
                   <Chip
                     key={bar.item.key}
                     item={bar.item}
-                    className={cn("absolute z-10 h-[22px]", barEnds(bar))}
-                    style={{ top: 34 + bar.lane * 24, left: 6, width: `calc(${bar.span * 100}% + ${bar.span - 1}px - 12px)` }}
+                    className={cn("absolute z-10 h-6", barEnds(bar))}
+                    style={{ top: 42 + bar.lane * 28, left: 6, width: `calc(${bar.span * 100}% + ${bar.span - 1}px - 12px)` }}
                   />
                 ))}
-              <div className="absolute bottom-1 left-1.5">
+              <div className="absolute bottom-1.5 left-2">
                 <More bars={bars} column={column} date={d} />
               </div>
             </div>

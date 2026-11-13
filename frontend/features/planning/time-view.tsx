@@ -6,9 +6,9 @@ import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 import { hhmm, iso, minutes } from "./dates";
-import { barEnds, Chip, hiddenOn, MAX_LANES, More, onDay, timed, weekBars, type Draft, type Item } from "./items";
+import { barEnds, Chip, hiddenOn, MAX_LANES, More, onDay, SHADE, timed, weekBars, type Draft, type Item } from "./items";
 
-const HOUR = 48; // px
+const HOUR = 56; // px
 const STEP = 15; // minutes a drag snaps to
 const DAY = 24 * 60;
 
@@ -41,7 +41,7 @@ export function TimeView({ days, items, onCreate }: { days: Date[]; items: Item[
   const [now, setNow] = useState(() => new Date());
   const today = iso(now);
   useEffect(() => {
-    scroller.current?.scrollTo({ top: 7 * HOUR });
+    scroller.current?.scrollTo({ top: 7 * HOUR - 12 }); // 07:00 and its label in view
     const timer = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(timer);
   }, []);
@@ -56,7 +56,7 @@ export function TimeView({ days, items, onCreate }: { days: Date[]; items: Item[
   const bandLanes = Math.max(0, ...band.map((bar) => bar.lane + 1));
   const hiddenIn = (column: number) => (all ? 0 : hiddenOn(band, column));
   const rows = all ? bandLanes : Math.min(MAX_LANES, bandLanes);
-  const bandHeight = Math.max(32, rows * 24 + 6 + (days.some((_, c) => hiddenIn(c) > 0) ? 20 : 0));
+  const bandHeight = Math.max(40, rows * 28 + 8 + (days.some((_, c) => hiddenIn(c) > 0) ? 22 : 0));
   const cols = { gridTemplateColumns: `3.5rem repeat(${days.length}, minmax(0, 1fr))` };
 
   return (
@@ -65,17 +65,18 @@ export function TimeView({ days, items, onCreate }: { days: Date[]; items: Item[
         <div className="grid border-b" style={cols}>
           <div />
           {days.map((d) => (
-            <div key={iso(d)} className={cn("border-l px-2 py-1.5 text-sm capitalize", iso(d) === today ? "font-semibold text-primary" : "text-muted-foreground")}>
-              {d.toLocaleDateString(lang, { weekday: "short" })} <span className="font-semibold">{d.getDate()}</span>
+            <div key={iso(d)} className={cn("flex items-center gap-2 border-l px-3 py-2", iso(d) === today ? "text-primary" : "text-muted-foreground")}>
+              <span className="text-xs font-semibold uppercase tracking-wide">{d.toLocaleDateString(lang, { weekday: "short" })}</span>
+              <span className={cn("grid size-8 place-items-center rounded-full text-lg font-semibold text-foreground", iso(d) === today && "bg-primary text-primary-foreground")}>{d.getDate()}</span>
             </div>
           ))}
         </div>
         <div className="grid border-b" style={cols}>
-          <div className="px-1 py-1.5 text-[10px] text-muted-foreground">{t("planning.allDay")}</div>
+          <div className="px-1.5 py-2 text-right text-[10px] leading-tight text-muted-foreground">{t("planning.allDay")}</div>
           <div className="relative" style={{ gridColumn: `span ${days.length}`, height: bandHeight }}>
             <div aria-hidden className="absolute inset-0 grid" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))` }}>
               {days.map((d) => (
-                <div key={iso(d)} className="border-l" />
+                <div key={iso(d)} className={cn("border-l", iso(d) === today && SHADE.today)} />
               ))}
             </div>
             {band
@@ -84,8 +85,8 @@ export function TimeView({ days, items, onCreate }: { days: Date[]; items: Item[
                 <Chip
                   key={bar.item.key}
                   item={bar.item}
-                  className={cn("absolute h-[22px]", barEnds(bar))}
-                  style={{ top: 4 + bar.lane * 24, left: `calc(${(bar.start / days.length) * 100}% + 4px)`, width: `calc(${(bar.span / days.length) * 100}% - 8px)` }}
+                  className={cn("absolute h-6", barEnds(bar))}
+                  style={{ top: 6 + bar.lane * 28, left: `calc(${(bar.start / days.length) * 100}% + 4px)`, width: `calc(${(bar.span / days.length) * 100}% - 8px)` }}
                 />
               ))}
             {days.map((d, column) => {
@@ -115,7 +116,7 @@ export function TimeView({ days, items, onCreate }: { days: Date[]; items: Item[
                   key={day}
                   role="group"
                   aria-label={label}
-                  className={cn("relative touch-none select-none border-l", onCreate && "cursor-cell")}
+                  className={cn("relative touch-none select-none border-l", d.getDay() % 6 === 0 && SHADE.quiet, day === today && SHADE.today, onCreate && "cursor-cell")}
                   style={{ height: 24 * HOUR, backgroundImage: `repeating-linear-gradient(to bottom, transparent 0 ${HOUR - 1}px, var(--border) ${HOUR - 1}px ${HOUR}px)` }}
                   onPointerDown={(e) => {
                     if (!onCreate || e.button !== 0) return;
@@ -134,10 +135,10 @@ export function TimeView({ days, items, onCreate }: { days: Date[]; items: Item[
                   {placed.map(({ item, range: [from, to], lane }) => (
                     <div
                       key={item.key}
-                      className="absolute px-0.5"
-                      style={{ top: (from / 60) * HOUR, height: Math.max(((to - from) / 60) * HOUR, 18), left: `${(lane / count) * 100}%`, width: `${100 / count}%` }}
+                      className="absolute px-1 py-px"
+                      style={{ top: (from / 60) * HOUR, height: Math.max(((to - from) / 60) * HOUR, 22), left: `${(lane / count) * 100}%`, width: `${100 / count}%` }}
                     >
-                      <Chip item={item} className="size-full items-start overflow-hidden" />
+                      <Chip item={item} block className="size-full overflow-hidden shadow-sm" />
                     </div>
                   ))}
                   {drag?.day === day && (
@@ -146,7 +147,7 @@ export function TimeView({ days, items, onCreate }: { days: Date[]; items: Item[
                     </div>
                   )}
                   {day === today && (
-                    <div aria-hidden className="pointer-events-none absolute inset-x-0 h-0.5 bg-danger" style={{ top: ((now.getHours() * 60 + now.getMinutes()) / 60) * HOUR }} />
+                    <div aria-hidden className="pointer-events-none absolute inset-x-0 z-10 h-0.5 bg-danger before:absolute before:-left-1 before:-top-1 before:size-2.5 before:rounded-full before:bg-danger" style={{ top: ((now.getHours() * 60 + now.getMinutes()) / 60) * HOUR }} />
                   )}
                 </div>
               );

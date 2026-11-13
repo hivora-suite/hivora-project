@@ -1,5 +1,6 @@
 "use client";
 
+import { Square, SquareCheck } from "lucide-react";
 import type { CSSProperties } from "react";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -20,6 +21,7 @@ export type Item = {
   color?: CalendarEvent["color"]; // an event's colour, or a card's first label
   late?: boolean;
   done?: boolean; // a validated card
+  task?: boolean; // a Kanban card, outlined; an event is filled
   open: () => void;
 };
 
@@ -29,28 +31,42 @@ export type Draft = Pick<CalendarEvent, "start_date" | "end_date" | "start_time"
 export const onDay = (item: Item, day: string) => item.from <= day && day <= item.to;
 export const timed = (item: Item) => !!item.start && !!item.end;
 
-/** An item's colour: a tint and a side bar, both from its label token. */
-export const tint = (color?: CalendarEvent["color"]) =>
-  color && { background: `color-mix(in oklch, var(--label-${color}) 18%, var(--card))`, borderLeft: `3px solid var(--label-${color})` };
+/** An item's look from its label token: an event filled with it, a card outlined in it. */
+function look(item: Item): CSSProperties {
+  const c = item.color ? `var(--label-${item.color})` : "var(--muted-foreground)";
+  if (item.task) return { background: "var(--card)", border: `1px solid ${c}`, borderLeftWidth: 3 };
+  return item.color ? { background: `color-mix(in oklch, ${c} 32%, var(--card))`, border: `1px solid color-mix(in oklch, ${c} 55%, var(--card))`, borderLeft: `3px solid ${c}` } : {};
+}
 
-export function Chip({ item, className, style }: { item: Item; className?: string; style?: CSSProperties }) {
+/** Opaque day backgrounds: a grid's gaps show through translucent ones. */
+export const SHADE = { quiet: "bg-[color-mix(in_oklch,var(--muted)_45%,var(--card))]", today: "bg-[color-mix(in_oklch,var(--primary)_7%,var(--card))]" };
+
+/** An item: a filled bar, a block in the hours (`block`), or, timed on one day outside the hours, a dot and its time. */
+export function Chip({ item, block, className, style }: { item: Item; block?: boolean; className?: string; style?: CSSProperties }) {
+  const dot = !block && !!item.start && item.from === item.to;
+  const Box = item.done ? SquareCheck : Square;
   return (
     <button
       type="button"
       onClick={item.open}
       onPointerDown={(e) => e.stopPropagation()} // a click on an item never starts a drag
       title={item.hint ? `${item.hint} · ${item.title}` : item.title}
-      style={{ ...(tint(item.color) || {}), ...style }}
+      style={{ ...(dot ? {} : look(item)), ...style }}
       className={cn(
-        "flex min-w-0 items-center gap-1.5 rounded border px-1.5 py-0.5 text-left text-xs transition-colors hover:border-primary",
-        !item.color && "bg-background",
+        "flex min-w-0 items-center gap-1.5 rounded-md px-2 text-left text-xs transition-shadow hover:ring-1 hover:ring-ring",
+        dot ? "hover:bg-muted" : "font-medium shadow-sm",
+        !dot && !item.task && !item.color && "border bg-muted",
+        block && "flex-wrap content-start items-baseline gap-x-1.5 py-1",
         item.late && !item.done && "font-medium text-danger",
         item.done && "text-muted-foreground line-through decoration-1",
         className,
       )}
     >
-      {item.start && <span className="shrink-0 tabular-nums text-muted-foreground">{item.start}</span>}
+      {item.task && <Box aria-hidden className="size-3.5 shrink-0" style={{ color: item.color && `var(--label-${item.color})` }} />}
+      {dot && <span aria-hidden className="size-2 shrink-0 rounded-full bg-muted-foreground" style={item.color && { background: `var(--label-${item.color})` }} />}
+      {item.start && !block && <span className="shrink-0 tabular-nums text-muted-foreground">{item.start}</span>}
       <span className="truncate">{item.title}</span>
+      {block && item.start && <span className="text-[11px] font-normal tabular-nums text-muted-foreground">{item.start} – {item.end}</span>}
       {item.hint && <span className="ml-auto shrink-0 truncate text-[10px] text-muted-foreground">{item.hint}</span>}
     </button>
   );
@@ -70,7 +86,7 @@ export function weekBars(items: Item[], days: string[]): Bar[] {
   const ends: number[] = [];
   return items
     .filter((item) => item.from <= last && item.to >= first)
-    .sort((a, b) => a.from.localeCompare(b.from) || b.to.localeCompare(a.to) || a.key.localeCompare(b.key))
+    .sort((a, b) => a.from.localeCompare(b.from) || b.to.localeCompare(a.to) || (a.start ?? "").localeCompare(b.start ?? "") || a.key.localeCompare(b.key))
     .map((item) => {
       const start = item.from < first ? 0 : days.indexOf(item.from);
       const end = item.to > last ? days.length - 1 : days.indexOf(item.to);
