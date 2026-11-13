@@ -1,6 +1,7 @@
 "use client";
 
 import { Calendar, Check, CheckSquare, CircleCheck, Maximize2 } from "lucide-react";
+import { useState } from "react";
 
 import type { BoardTask, ProjectMember } from "@/lib/api/client";
 import { useI18n } from "@/lib/i18n";
@@ -25,6 +26,8 @@ export function TaskCard({ task, hint, onToggle, members, draggable, dragging, o
   const { t, lang } = useI18n();
   const done = task.checklist.filter((item) => item.done).length;
   const assignees = members.filter((m) => task.assignee_ids.includes(m.user_id));
+  // Validated from here: a green pulse and a pop, never on cards loaded already validated.
+  const [cheered, setCheered] = useState(false);
   return (
     <div
       data-task={task.id}
@@ -39,6 +42,7 @@ export function TaskCard({ task, hint, onToggle, members, draggable, dragging, o
       className={cn(
         "group grid cursor-pointer gap-2 rounded-md border bg-card p-2.5 text-sm shadow-sm transition-[border-color,box-shadow,opacity] duration-200 hover:border-primary hover:shadow-md",
         dragging && "opacity-40",
+        cheered && task.done && "animate-done",
       )}
     >
       {hint && <span className="-mb-1 truncate text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{hint}</span>}
@@ -50,7 +54,10 @@ export function TaskCard({ task, hint, onToggle, members, draggable, dragging, o
         </div>
       )}
       <div className="flex items-start justify-between gap-2">
-        <span className={cn("min-w-0 flex-1 break-words font-medium", task.done && "text-muted-foreground line-through decoration-1")}>{task.title}</span>
+        <span className="min-w-0 flex-1 break-words font-medium">
+          {/* The strike is drawn left to right. */}
+          <span className={cn("bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_1px] bg-[position:0_55%] bg-no-repeat box-decoration-clone transition-[background-size,color] duration-500", task.done && "bg-[length:100%_1px] text-muted-foreground")}>{task.title}</span>
+        </span>
         {onToggle || task.done ? (
           <button
             type="button"
@@ -60,6 +67,7 @@ export function TaskCard({ task, hint, onToggle, members, draggable, dragging, o
             aria-pressed={task.done}
             onClick={(e) => {
               e.stopPropagation();
+              setCheered(!task.done);
               onToggle?.();
             }}
             className={cn(
@@ -67,7 +75,7 @@ export function TaskCard({ task, hint, onToggle, members, draggable, dragging, o
               task.done ? "text-ok" : "text-muted-foreground opacity-0 hover:text-ok focus-visible:opacity-100 group-hover:opacity-100",
             )}
           >
-            {task.done ? <CircleCheck className="size-4" /> : <Check className="size-3.5" />}
+            {task.done ? <CircleCheck className={cn("size-4", cheered && "animate-pop")} /> : <Check className="size-3.5" />}
           </button>
         ) : null}
         {/* Its click reaches the card, which opens: one behaviour, and a keyboard target. */}
